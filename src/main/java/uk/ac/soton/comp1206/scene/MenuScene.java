@@ -3,9 +3,11 @@ package uk.ac.soton.comp1206.scene;
 import javafx.event.ActionEvent;
 import javafx.scene.control.Button;
 import javafx.scene.layout.*;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.text.Text;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
@@ -22,6 +24,8 @@ public class MenuScene extends BaseScene {
      */
     public MenuScene(GameWindow gameWindow) {
         super(gameWindow);
+        Multimedia.playMusic("menu.mp3");
+
         logger.info("Creating Menu Scene");
     }
 
@@ -47,13 +51,15 @@ public class MenuScene extends BaseScene {
         var title = new Text("TetrECS");
         title.getStyleClass().add("title");
         mainPane.setTop(title);
+       // Multimedia.playMusic("menu.mp3");
 
         //For now, let us just add a button that starts the game. I'm sure you'll do something way better.
         var button = new Button("Play");
         mainPane.setCenter(button);
-
         //Bind the button action to the startGame method in the menu
         button.setOnAction(this::startGame);
+
+
     }
 
     /**
@@ -69,6 +75,7 @@ public class MenuScene extends BaseScene {
      * @param event event
      */
     private void startGame(ActionEvent event) {
+        Multimedia.stopMusic();
         gameWindow.startChallenge();
     }
 

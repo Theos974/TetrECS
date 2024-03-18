@@ -2,8 +2,11 @@ package uk.ac.soton.comp1206.game;
 
 import java.util.HashSet;
 import java.util.Random;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 
@@ -31,6 +34,61 @@ public class Game {
     protected final Grid grid;
 
     protected GamePiece currentPiece;
+    private static final int POINTS_PER_LEVEL = 1000;
+
+    private final IntegerProperty score = new SimpleIntegerProperty(0);
+    private final IntegerProperty level = new SimpleIntegerProperty(0);
+    private final IntegerProperty lives = new SimpleIntegerProperty(3);
+    private final IntegerProperty multiplier = new SimpleIntegerProperty(1);
+
+    public final int getScore() {
+        return score.get();
+    }
+
+    public final void setScore(int value) {
+        score.set(value);
+    }
+
+    public IntegerProperty scoreProperty() {
+        return score;
+    }
+
+    public final int getLevel() {
+        return level.get();
+    }
+
+    public final void setLevel(int value) {
+        level.set(value);
+    }
+
+    public IntegerProperty levelProperty() {
+        return level;
+    }
+
+    public final int getLives() {
+        return lives.get();
+    }
+
+    public final void setLives(int value) {
+        lives.set(value);
+    }
+
+    public IntegerProperty livesProperty() {
+        return lives;
+    }
+
+    public final int getMultiplier() {
+        return multiplier.get();
+    }
+
+    public final void setMultiplier(int value) {
+        multiplier.set(value);
+    }
+
+    public IntegerProperty multiplierProperty() {
+        return multiplier;
+    }
+
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -77,8 +135,9 @@ public class Game {
             logger.info("Attempting to place piece");
 
             grid.playPiece(currentPiece, x, y);
-            afterPiece();
-            nextPiece();
+            Multimedia.playAudio("place.wav");
+            afterPiece(); //checks for full lines after playing the piece
+            nextPiece(); //gets the next piece
         } else {
             logger.info("Piece cannot be played at the specified at " + x + ", " + y);
 
@@ -117,7 +176,7 @@ public class Game {
     /**
      * gets a new piece to place
      *
-     * @return
+     * new piece is returned @return
      */
     public GamePiece spawnPiece() {
         Random random = new Random();
@@ -131,17 +190,19 @@ public class Game {
         currentPiece = spawnPiece();
     }
 
+
     /**
-     * clears the lines
-      */
+     * checks for full lines (either vertical or horizontal)  and clears them if they exist
+     */
     public void afterPiece() {
 
         HashSet<GameBlockCoordinate> blocksToClear = new HashSet<>();
+        int numLines = 0;
 
         for (int row = 0; row < getRows(); row++) { //checks for full lines
             boolean fullRow = true;
             for (int col = 0; col < getCols(); col++) {
-                if (grid.get(row, col) == 0) {
+                if (grid.get(col, row) == 0) {
                     fullRow = false;
                     break;
                 }
@@ -151,13 +212,14 @@ public class Game {
                     blocksToClear.add(new GameBlockCoordinate(col, row));
                 }
                 logger.info("Full row found and will be cleared: " + row);
+                numLines++;
             }
         }
 
         for (int col = 0; col < getCols(); col++) { //checks for full lines
             boolean fullCol = true;
             for (int row = 0; row < getRows(); row++) {
-                if (grid.get(row, col) == 0) {
+                if (grid.get(col, row) == 0) {
                     fullCol = false;
                     break;
                 }
@@ -167,13 +229,53 @@ public class Game {
                     blocksToClear.add(new GameBlockCoordinate(col, row));
                 }
                 logger.info("Full column found and will be cleared: " + col);
+                numLines++;
             }
 
+        }
+        if (!blocksToClear.isEmpty()) {
+            // Play the sound for clearing lines
+            Multimedia.playAudio("clear.wav");
         }
 
         for (GameBlockCoordinate cord : blocksToClear) { //clears the blocks
             grid.set(cord.getX(), cord.getY(), 0);
         }
+        addScore(numLines, blocksToClear.size());
+
+    }
+
+    /**
+     * if any lines are cleared the new score is calculated
+     * multiplier is also handled based on whether the lines are cleared or not
+     * updating the level is also handled based on the points
+     *
+     * @param linesCleared
+     * @param blocksCleared
+     */
+    public void addScore(int linesCleared, int blocksCleared) {
+
+        int points;
+
+        if (linesCleared > 0) {
+            Multimedia.playAudio("clear.wav");
+            points = linesCleared * blocksCleared * 10 * getMultiplier(); //calculate points gained
+            setScore(getScore() + points); //update score
+            logger.info("Score updated. Lines cleared: " + linesCleared + ", Blocks cleared: " + blocksCleared);
+            setMultiplier(getMultiplier() + 1);
+            logger.info("multiplier increased to " + getMultiplier());
+        }else {
+            // Reset the multiplier if no lines are cleared
+            setMultiplier(1);
+            logger.info("Multiplier reset to 1");
+        }
+
+        int newLevel = getScore() / POINTS_PER_LEVEL; //update level bsaed on the score
+        if (newLevel != getLevel()) {
+            setLevel(newLevel);
+            logger.info("Level updated");
+        }
+
 
     }
 }
