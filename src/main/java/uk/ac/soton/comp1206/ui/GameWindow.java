@@ -1,21 +1,27 @@
 package uk.ac.soton.comp1206.ui;
 
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.App;
+import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.scene.*;
 
 /**
  * The GameWindow is the single window for the game where everything takes place. To move between screens in the game,
  * we simply change the scene.
- *
+ * <p>
  * The GameWindow has methods to launch each of the different parts of the game by switching scenes. You can add more
  * methods here to add more screens to the game.
  */
@@ -33,10 +39,13 @@ public class GameWindow {
 
     final Communicator communicator;
 
+
+
     /**
      * Create a new GameWindow attached to the given stage with the specified width and height
-     * @param stage stage
-     * @param width width
+     *
+     * @param stage  stage
+     * @param width  width
      * @param height height
      */
     public GameWindow(Stage stage, int width, int height) {
@@ -57,8 +66,9 @@ public class GameWindow {
         //Setup communicator
         communicator = new Communicator("ws://ofb-labs.soton.ac.uk:9700");
 
-        //Go to menu
-        startMenu();
+        //initial scene started
+        start();
+
     }
 
     /**
@@ -68,22 +78,56 @@ public class GameWindow {
         logger.info("Loading resources");
 
         //We need to load fonts here due to the Font loader bug with spaces in URLs in the CSS files
-        Font.loadFont(getClass().getResourceAsStream("/style/Orbitron-Regular.ttf"),32);
-        Font.loadFont(getClass().getResourceAsStream("/style/Orbitron-Bold.ttf"),32);
-        Font.loadFont(getClass().getResourceAsStream("/style/Orbitron-ExtraBold.ttf"),32);
+        Font.loadFont(getClass().getResourceAsStream("/style/Orbitron-Regular.ttf"), 32);
+        Font.loadFont(getClass().getResourceAsStream("/style/Orbitron-Bold.ttf"), 32);
+        Font.loadFont(getClass().getResourceAsStream("/style/Orbitron-ExtraBold.ttf"), 32);
     }
 
     /**
      * Display the main menu
      */
     public void startMenu() {
+        logger.info("Switching to MenuScene");
+
         loadScene(new MenuScene(this));
+    }
+
+    public void start() {
+        // Create an initial Pane for the fade in image
+        logger.info("fade in scene");
+        StackPane splashScreen = new StackPane();
+        splashScreen.setStyle("-fx-background-color: black;");
+        Image image = new Image(getClass().getResourceAsStream("/images/ECSGames.png"));
+        ImageView imageView = new ImageView(image);
+        imageView.fitWidthProperty().bind(splashScreen.widthProperty().multiply(0.75));
+        imageView.setPreserveRatio(true);
+        imageView.setSmooth(true);
+        splashScreen.getChildren().add(imageView);
+
+        // Set the initial Scene
+        Scene initialScene = new Scene(splashScreen, width, height);
+        stage.setScene(initialScene);
+        stage.show();
+
+        // Create a fade transition for the image
+        FadeTransition fadeTransition = new FadeTransition(Duration.seconds(2), imageView);
+        fadeTransition.setFromValue(0);
+        fadeTransition.setToValue(1);
+        fadeTransition.setOnFinished(event -> startMenu()); // After fade in, start the menu
+        fadeTransition.play();
     }
 
     /**
      * Display the single player challenge
      */
-    public void startChallenge() { loadScene(new ChallengeScene(this)); }
+    public void startChallenge() {
+        loadScene(new ChallengeScene(this));
+    }
+    public void startInstructions() {
+        InstructionsScene instructionsScene = new InstructionsScene(this);
+        loadScene(instructionsScene);
+    }
+
 
     /**
      * Setup the default settings for the stage itself (the window), such as the title and minimum width and height.
@@ -97,6 +141,7 @@ public class GameWindow {
 
     /**
      * Load a given scene which extends BaseScene and switch over.
+     *
      * @param newScene new scene to load
      */
     public void loadScene(BaseScene newScene) {
@@ -117,7 +162,7 @@ public class GameWindow {
      * Setup the default scene (an empty black scene) when no scene is loaded
      */
     public void setupDefaultScene() {
-        this.scene = new Scene(new Pane(),width,height, Color.BLACK);
+        this.scene = new Scene(new Pane(), width, height, Color.BLACK);
         stage.setScene(this.scene);
     }
 
@@ -131,6 +176,7 @@ public class GameWindow {
 
     /**
      * Get the current scene being displayed
+     *
      * @return scene
      */
     public Scene getScene() {
@@ -139,6 +185,7 @@ public class GameWindow {
 
     /**
      * Get the width of the Game Window
+     *
      * @return width
      */
     public int getWidth() {
@@ -147,6 +194,7 @@ public class GameWindow {
 
     /**
      * Get the height of the Game Window
+     *
      * @return height
      */
     public int getHeight() {
@@ -155,6 +203,7 @@ public class GameWindow {
 
     /**
      * Get the communicator
+     *
      * @return communicator
      */
     public Communicator getCommunicator() {

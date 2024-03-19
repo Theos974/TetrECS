@@ -19,7 +19,7 @@ import uk.ac.soton.comp1206.game.Grid;
  */
 public class GameBoard extends GridPane {
 
-    private static final Logger logger = LogManager.getLogger(GameBoard.class);
+    static final Logger logger = LogManager.getLogger(GameBoard.class);
 
     /**
      * Number of columns in the board

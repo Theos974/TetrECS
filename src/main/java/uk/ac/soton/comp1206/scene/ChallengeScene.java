@@ -1,15 +1,20 @@
 package uk.ac.soton.comp1206.scene;
 
+import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBoard;
+import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
+import uk.ac.soton.comp1206.game.Grid;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
@@ -22,6 +27,8 @@ public class ChallengeScene extends BaseScene {
     private final Label livesLabel = new Label("Lives: 3");
     private final Label multiplierLabel = new Label("Multiplier: 1x");
     private final VBox stats = new VBox(10);
+
+    private PieceBoard nextPieceBoard;
 
 
     private static final Logger logger = LogManager.getLogger(MenuScene.class);
@@ -36,6 +43,7 @@ public class ChallengeScene extends BaseScene {
         super(gameWindow);
         logger.info("Creating Challenge Scene");
         Multimedia.playMusic("game.wav");
+        this.nextPieceBoard = new PieceBoard(new Game(3, 3), 150, 150);
     }
 
     /**
@@ -52,7 +60,7 @@ public class ChallengeScene extends BaseScene {
         var challengePane = new StackPane();
         challengePane.setMaxWidth(gameWindow.getWidth());
         challengePane.setMaxHeight(gameWindow.getHeight());
-        challengePane.getStyleClass().add("menu-background");
+        challengePane.getStyleClass().add("challenge-background");
         root.getChildren().add(challengePane);
 
         var mainPane = new BorderPane();
@@ -91,13 +99,13 @@ public class ChallengeScene extends BaseScene {
         scoreLabel.textProperty().bind(game.scoreProperty().asString("Score: %d"));
         levelLabel.textProperty().bind(game.levelProperty().asString("Level: %d"));
         livesLabel.textProperty().bind(game.livesProperty().asString("Lives: %d"));
-        multiplierLabel.textProperty().bind(game.multiplierProperty().asString("Multiplier: %d"));
+        multiplierLabel.textProperty().bind(game.multiplierProperty().asString("Multiplier: x%d"));
 
         // Style the stats labels
-        scoreLabel.getStyleClass().add("score");
-        levelLabel.getStyleClass().add("level");
-        livesLabel.getStyleClass().add("lives");
-        multiplierLabel.getStyleClass().add("level");
+        scoreLabel.getStyleClass().add("button-glow");
+        levelLabel.getStyleClass().add("button-glow");
+        livesLabel.getStyleClass().add("button-glow-red");
+        multiplierLabel.getStyleClass().add("button-glow-red");
 
         // Configure the stats VBox
         stats.setAlignment(Pos.TOP_RIGHT); // Align to the top right of the VBox
@@ -105,9 +113,8 @@ public class ChallengeScene extends BaseScene {
         stats.setSpacing(10); // Add spacing between elements in the VBox
 
         logger.info("Game stats UI elements bound to game properties");
-
-
-        stats.getChildren().addAll(scoreLabel, livesLabel,multiplierLabel , levelLabel);
+        stats.getChildren()
+            .addAll(scoreLabel, levelLabel, livesLabel, multiplierLabel, nextPieceBoard);
 
     }
 
@@ -119,6 +126,11 @@ public class ChallengeScene extends BaseScene {
         logger.info("Initialising Challenge");
 
         game.start();
+        nextPieceBoard.setPiece(game.getCurrentPiece());
+        game.setOnNextPieceListener(piece -> {
+            // Update the PieceBoard with the new piece
+            nextPieceBoard.setPiece(piece);
+        });
     }
 
 }

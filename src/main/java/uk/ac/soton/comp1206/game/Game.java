@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
+import uk.ac.soton.comp1206.event.NextPieceListener;
 
 /**
  * The Game class handles the main logic, state and properties of the TetrECS game. Methods to manipulate the game state
@@ -35,6 +36,8 @@ public class Game {
 
     protected GamePiece currentPiece;
     private static final int POINTS_PER_LEVEL = 1000;
+    private NextPieceListener nextPieceListener;
+    private boolean swoosh = false;
 
     private final IntegerProperty score = new SimpleIntegerProperty(0);
     private final IntegerProperty level = new SimpleIntegerProperty(0);
@@ -104,6 +107,8 @@ public class Game {
         this.grid = new Grid(cols, rows);
     }
 
+
+
     /**
      * Start the game
      */
@@ -135,8 +140,13 @@ public class Game {
             logger.info("Attempting to place piece");
 
             grid.playPiece(currentPiece, x, y);
-            Multimedia.playAudio("place.wav");
+
             afterPiece(); //checks for full lines after playing the piece
+            if (swoosh){
+                Multimedia.playAudio("clear.wav");
+            }else {
+                Multimedia.playAudio("place.wav");
+            }
             nextPiece(); //gets the next piece
         } else {
             logger.info("Piece cannot be played at the specified at " + x + ", " + y);
@@ -187,15 +197,21 @@ public class Game {
      * gets the next piece
      */
     public void nextPiece() {
-        currentPiece = spawnPiece();
+        GamePiece next = spawnPiece(); // Spawn the next piece
+        triggerNextPieceListener(next); // Trigger the listener to handle the new piece
+        currentPiece = next; // Set the current piece to the next piece    }
     }
 
+    public GamePiece getCurrentPiece(){
+        return currentPiece;
+    }
 
     /**
      * checks for full lines (either vertical or horizontal)  and clears them if they exist
      */
     public void afterPiece() {
 
+        swoosh = false;
         HashSet<GameBlockCoordinate> blocksToClear = new HashSet<>();
         int numLines = 0;
 
@@ -234,8 +250,8 @@ public class Game {
 
         }
         if (!blocksToClear.isEmpty()) {
-            // Play the sound for clearing lines
-            Multimedia.playAudio("clear.wav");
+            // swoosh flag becomes true
+          swoosh = true;
         }
 
         for (GameBlockCoordinate cord : blocksToClear) { //clears the blocks
@@ -258,12 +274,13 @@ public class Game {
         int points;
 
         if (linesCleared > 0) {
-            Multimedia.playAudio("clear.wav");
+
             points = linesCleared * blocksCleared * 10 * getMultiplier(); //calculate points gained
             setScore(getScore() + points); //update score
             logger.info("Score updated. Lines cleared: " + linesCleared + ", Blocks cleared: " + blocksCleared);
             setMultiplier(getMultiplier() + 1);
             logger.info("multiplier increased to " + getMultiplier());
+
         }else {
             // Reset the multiplier if no lines are cleared
             setMultiplier(1);
@@ -273,9 +290,21 @@ public class Game {
         int newLevel = getScore() / POINTS_PER_LEVEL; //update level bsaed on the score
         if (newLevel != getLevel()) {
             setLevel(newLevel);
+            Multimedia.playAudio("level.wav");
             logger.info("Level updated");
         }
 
 
     }
+    public void setOnNextPieceListener(NextPieceListener listener) {
+        this.nextPieceListener = listener;
+    }
+
+
+    private void triggerNextPieceListener(GamePiece piece) {
+        if(nextPieceListener != null) {
+            nextPieceListener.nextPiece(piece);
+        }
+    }
+
 }
