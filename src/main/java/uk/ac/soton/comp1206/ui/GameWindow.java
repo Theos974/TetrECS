@@ -14,6 +14,7 @@ import javafx.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.App;
+import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.scene.*;
@@ -88,13 +89,17 @@ public class GameWindow {
      */
     public void startMenu() {
         logger.info("Switching to MenuScene");
-
+        Multimedia.playMusic("menu.mp3");
         loadScene(new MenuScene(this));
     }
 
+    /**
+     * displays the fade in intro scene
+     */
     public void start() {
         // Create an initial Pane for the fade in image
         logger.info("fade in scene");
+        Multimedia.playAudio("intro.mp3");
         StackPane splashScreen = new StackPane();
         splashScreen.setStyle("-fx-background-color: black;");
         Image image = new Image(getClass().getResourceAsStream("/images/ECSGames.png"));
@@ -110,7 +115,7 @@ public class GameWindow {
         stage.show();
 
         // Create a fade transition for the image
-        FadeTransition fadeTransition = new FadeTransition(Duration.seconds(2), imageView);
+        FadeTransition fadeTransition = new FadeTransition(Duration.seconds(4), imageView);
         fadeTransition.setFromValue(0);
         fadeTransition.setToValue(1);
         fadeTransition.setOnFinished(event -> startMenu()); // After fade in, start the menu
@@ -121,6 +126,9 @@ public class GameWindow {
      * Display the single player challenge
      */
     public void startChallenge() {
+
+        Multimedia.stopMusic();
+        logger.info("menu music stopped");
         loadScene(new ChallengeScene(this));
     }
     public void startInstructions() {

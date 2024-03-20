@@ -9,6 +9,7 @@ import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
+import uk.ac.soton.comp1206.event.FollowingPieceListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
 
 /**
@@ -35,8 +36,10 @@ public class Game {
     protected final Grid grid;
 
     protected GamePiece currentPiece;
+    protected GamePiece followingPiece;
     private static final int POINTS_PER_LEVEL = 1000;
     private NextPieceListener nextPieceListener;
+    private FollowingPieceListener followingPieceListener;
     private boolean swoosh = false;
 
     private final IntegerProperty score = new SimpleIntegerProperty(0);
@@ -108,7 +111,6 @@ public class Game {
     }
 
 
-
     /**
      * Start the game
      */
@@ -123,6 +125,7 @@ public class Game {
     public void initialiseGame() {
         logger.info("Initialising game");
         currentPiece = spawnPiece();
+        followingPiece = spawnPiece();
     }
 
     /**
@@ -142,9 +145,9 @@ public class Game {
             grid.playPiece(currentPiece, x, y);
 
             afterPiece(); //checks for full lines after playing the piece
-            if (swoosh){
+            if (swoosh) {
                 Multimedia.playAudio("clear.wav");
-            }else {
+            } else {
                 Multimedia.playAudio("place.wav");
             }
             nextPiece(); //gets the next piece
@@ -185,7 +188,7 @@ public class Game {
 
     /**
      * gets a new piece to place
-     *
+     * <p>
      * new piece is returned @return
      */
     public GamePiece spawnPiece() {
@@ -194,17 +197,97 @@ public class Game {
     }
 
     /**
-     * gets the next piece
+     * orders the next pieces in play
      */
     public void nextPiece() {
-        GamePiece next = spawnPiece(); // Spawn the next piece
-        triggerNextPieceListener(next); // Trigger the listener to handle the new piece
-        currentPiece = next; // Set the current piece to the next piece    }
+        // Makes the following piece the current piece
+        currentPiece = followingPiece;
+
+        // Get a new piece to become the new following piece
+        GamePiece newFollowing = spawnPiece();
+
+        // Update the followingPiece reference to point to the new piece
+        followingPiece = newFollowing;
+
+        // Trigger the listener to update the main piece board with the new current piece
+        triggerNextPieceListener(currentPiece);
+
+        // Trigger another listener with the new following piece
+        triggerFollowingPieceListener(newFollowing);
+
     }
 
-    public GamePiece getCurrentPiece(){
+    /**
+     * The method swaps between the current and following pieces
+     */
+    public void swapCurrentPiece() {
+        if (currentPiece != null && followingPiece != null) {
+            GamePiece temp = currentPiece;
+            currentPiece = followingPiece;
+            followingPiece = temp;
+            logger.info("swap method called");
+            // Update the listeners to reflect the change in the UI
+            triggerNextPieceListener(currentPiece);
+            triggerFollowingPieceListener(followingPiece);
+        }
+    }
+
+    /**
+     * The method returns the current piece
+      * @return currentPiece
+     */
+    public GamePiece getCurrentPiece() {
         return currentPiece;
     }
+
+    /**
+     * returns the next piece after the current one
+     * @return followingPiece
+     */
+    public GamePiece getFollowingPiece() {
+        return followingPiece;
+    }
+
+
+    /**
+     * rotates current piece clockwise
+     */
+    public void rotateCurrentPiece() {
+
+        if (currentPiece != null) {
+            currentPiece.rotate();
+            Multimedia.playAudio("rotate.wav");
+            logger.info("piece rotated");
+        }
+        triggerNextPieceListener(currentPiece);
+        logger.info("rotate method called");
+    }
+
+    /**
+     * rotates current piece counter clockwise
+     */
+    public void rotateCurrentPieceCounterClockwise() {
+        if (currentPiece != null) {
+
+            currentPiece.rotateCounterClockwise();
+            Multimedia.playAudio("rotate.wav");
+            triggerNextPieceListener(currentPiece);
+            logger.info(" counter clockwise rotate method called");
+        }
+    }
+
+    /**
+     * increases the level based on the players score(every 1000 points)
+     */
+    public void upgradeLevel() {
+        int newLevel = getScore() / POINTS_PER_LEVEL; //update level bsaed on the score
+        if (newLevel != getLevel()) {
+            setLevel(newLevel);
+            Multimedia.playAudio("level.wav");
+            logger.info("Level updated");
+        }
+    }
+
 
     /**
      * checks for full lines (either vertical or horizontal)  and clears them if they exist
@@ -251,7 +334,7 @@ public class Game {
         }
         if (!blocksToClear.isEmpty()) {
             // swoosh flag becomes true
-          swoosh = true;
+            swoosh = true;
         }
 
         for (GameBlockCoordinate cord : blocksToClear) { //clears the blocks
@@ -277,34 +360,50 @@ public class Game {
 
             points = linesCleared * blocksCleared * 10 * getMultiplier(); //calculate points gained
             setScore(getScore() + points); //update score
-            logger.info("Score updated. Lines cleared: " + linesCleared + ", Blocks cleared: " + blocksCleared);
+            logger.info("Score updated. Lines cleared: " + linesCleared + ", Blocks cleared: " +
+                blocksCleared);
             setMultiplier(getMultiplier() + 1);
             logger.info("multiplier increased to " + getMultiplier());
 
-        }else {
+        } else {
             // Reset the multiplier if no lines are cleared
             setMultiplier(1);
             logger.info("Multiplier reset to 1");
         }
-
-        int newLevel = getScore() / POINTS_PER_LEVEL; //update level bsaed on the score
-        if (newLevel != getLevel()) {
-            setLevel(newLevel);
-            Multimedia.playAudio("level.wav");
-            logger.info("Level updated");
-        }
-
+        upgradeLevel();
 
     }
+
+
+    /**
+     *  Method to set the current piece listener
+     * @param listener
+     */
     public void setOnNextPieceListener(NextPieceListener listener) {
         this.nextPieceListener = listener;
     }
 
 
     private void triggerNextPieceListener(GamePiece piece) {
-        if(nextPieceListener != null) {
+        if (nextPieceListener != null) {
             nextPieceListener.nextPiece(piece);
         }
+    }
+
+    private void triggerFollowingPieceListener(GamePiece piece) {
+        if (followingPieceListener != null) {
+            followingPieceListener.nextPiece(piece);
+        }
+    }
+
+
+
+    /**
+     *  Method to set the following piece listener
+     * @param listener
+     */
+    public void setOnFollowingPieceListener(FollowingPieceListener listener) {
+        this.followingPieceListener = listener;
     }
 
 }

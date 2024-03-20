@@ -11,6 +11,7 @@ public class PieceBoard extends GameBoard {
 
     public PieceBoard(Game grid, double width, double height) {
         super(grid.getGrid(), width, height);
+
     }
 
 

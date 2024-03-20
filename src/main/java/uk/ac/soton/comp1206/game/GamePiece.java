@@ -210,6 +210,16 @@ public class GamePiece {
         blocks = rotated;
     }
 
+    /**
+     *  Rotate this piece 3 times by rotating it's 3x3 grid/creating counter clockwise effect
+      */
+    public void rotateCounterClockwise() {
+        // Rotate counterclockwise by rotating clockwise 3 times
+        for (int i = 0; i < 3; i++) {
+            rotate();
+        }
+    }
+
 
     /**
      * Return the string representation of this piece

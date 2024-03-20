@@ -6,6 +6,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.RotateTransition;
 import javafx.animation.Timeline;
 import javafx.event.ActionEvent;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -37,7 +38,7 @@ public class MenuScene extends BaseScene {
      */
     public MenuScene(GameWindow gameWindow) {
         super(gameWindow);
-        Multimedia.playMusic("menu.mp3");
+
 
         logger.info("Creating Menu Scene");
     }
@@ -70,6 +71,7 @@ public class MenuScene extends BaseScene {
         HBox titleBox = new HBox(titleImage);
         titleBox.setAlignment(Pos.CENTER);
         mainPane.setTop(titleBox);
+        titleBox.setPadding(new Insets(50,0,0,0));
 
         //wiggle animation
         RotateTransition rotateTransition = new RotateTransition(Duration.millis(80), titleImage);
@@ -109,8 +111,8 @@ public class MenuScene extends BaseScene {
     @Override
     public void initialise() {
         start.setOnAction(event -> {
-            Multimedia.stopMusic();
             gameWindow.startChallenge();
+            logger.info("challenge started");
         });
 
         instructionsButton.setOnAction(event -> gameWindow.startInstructions());

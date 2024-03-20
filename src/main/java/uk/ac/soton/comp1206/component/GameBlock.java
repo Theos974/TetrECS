@@ -1,6 +1,8 @@
 package uk.ac.soton.comp1206.component;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.canvas.Canvas;
@@ -20,6 +22,9 @@ import org.apache.logging.log4j.Logger;
 public class GameBlock extends Canvas {
 
     private static final Logger logger = LogManager.getLogger(GameBlock.class);
+    private boolean hovered = false;
+    private boolean centre = false;
+
 
     /**
      * The set of colours for different pieces
@@ -63,6 +68,7 @@ public class GameBlock extends Canvas {
      */
     private final IntegerProperty value = new SimpleIntegerProperty(0);
 
+
     /**
      * Create a new single Game Block
      * @param gameBoard the board this block belongs to
@@ -87,6 +93,8 @@ public class GameBlock extends Canvas {
 
         //When the value property is updated, call the internal updateValue method
         value.addListener(this::updateValue);
+
+
     }
 
     /**
@@ -102,15 +110,52 @@ public class GameBlock extends Canvas {
     /**
      * Handle painting of the block canvas
      */
+
     public void paint() {
-        //If the block is empty, paint as empty
         if(value.get() == 0) {
             paintEmpty();
         } else {
             //If the block is not empty, paint with the colour represented by the value
             paintColor(COLOURS[value.get()]);
         }
+        // If hover is true, then paint hover effect
+        if (this.hovered) {
+           paintHoverEffect();
+        }
+
     }
+
+    private void paintHoverEffect() {
+        var gc = getGraphicsContext2D();
+        gc.setFill(Color.LIGHTGRAY);
+
+        // Slightly reduce the block size for the hover effect to create a border look
+        Color hoverColor =  Color.rgb(211, 211, 211, 0.5);
+        gc.setFill(hoverColor);
+
+        // Fill the entire block
+        gc.fillRect(0, 0, width, height);
+    }
+
+    /**
+     *when hovering over a block, "hovered" set as focus
+     */
+    protected void setHovered(boolean focus){
+        this.hovered = focus;
+        paint();
+    }
+
+    /**
+     * returns the value of hovered
+     * @return hovered
+     */
+    protected boolean getHovered(){
+        return this.hovered;
+    }
+
+
+
+
 
     /**
      * Paint this canvas empty

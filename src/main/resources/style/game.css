@@ -1,4 +1,4 @@
-.gamepane {
+.game-pane {
     -fx-background-color: black;
 }
 
@@ -46,7 +46,7 @@
     -fx-fill: yellow;
 }
 
-.bigtitle {
+.big-title {
     -fx-fill: yellow;
     -fx-font-family: 'Orbitron';
     -fx-font-size: 64px;
@@ -89,6 +89,16 @@
 
 .level {
     -fx-fill: #ff6600;
+    -fx-font-family: 'Orbitron';
+    -fx-font-size: 24px;
+    -fx-font-weight: 700;
+    -fx-border-color: black;
+    -fx-stroke: black;
+    -fx-text-alignment: center;
+    -fx-effect: dropshadow(gaussian, black, 1, 1.0, 1, 1);
+}
+.multiplier {
+    -fx-fill: red;
     -fx-font-family: 'Orbitron';
     -fx-font-size: 24px;
     -fx-font-weight: 700;
@@ -170,6 +180,12 @@
     -fx-border-color: white;
     -fx-border-width: 1;
 }
+.nextPieceBoard {
+    -fx-padding: 10;
+    -fx-background-color: rgba(0, 0, 0, 0.5);
+    -fx-border-color: pink;
+    -fx-border-width: 1;
+}
 
 .scroller {
     -fx-background-color: transparent;
@@ -239,7 +255,7 @@ TextField {
     -fx-background-color: transparent;
     -fx-text-fill: white;
     -fx-font-family: 'Orbitron';
-    -fx-font-size: 24px;
+    -fx-font-size: 30px;
     -fx-padding: 10px;
     -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.8), 15, 0.5, 0, 0);
 }
@@ -256,7 +272,7 @@ TextField {
     -fx-background-color: transparent;
     -fx-text-fill: white;
     -fx-font-family: 'Orbitron';
-    -fx-font-size: 24px;
+    -fx-font-size: 30px;
     -fx-padding: 10px;
     -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 15, 0.5, 0, 0); /* Changed to red glow */
 }
