@@ -2,6 +2,9 @@ package uk.ac.soton.comp1206.game;
 
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import uk.ac.soton.comp1206.scene.ChallengeScene;
 
 /**
  * The Grid is a model which holds the state of a game board. It is made up of a set of Integer values arranged in a 2D
@@ -30,6 +33,7 @@ public class Grid {
      * The grid is a 2D arrow with rows and columns of SimpleIntegerProperties.
      */
     private final SimpleIntegerProperty[][] grid;
+    private static final Logger logger = LogManager.getLogger(Grid.class);
 
     /**
      * Create a new Grid with the specified number of columns and rows and initialise them
@@ -55,7 +59,7 @@ public class Grid {
 
     /**
      * iterates through the pieces grid to see whether the corresponding places in the games grid are occupied to check if it can place the piece
-     * @param piece
+     * @param piece (checked if it fits)
      * @param centerX
      * @param centerY
      * @return
@@ -64,7 +68,7 @@ public class Grid {
         int[][] blocks = piece.getBlocks();
         int centerBlockX = blocks[0].length / 2; //center x value of piece
         int centerBlockY = blocks.length / 2; //centre y value of piece
-
+        logger.info("Attempting to place piece");
         for (int row = 0; row < blocks.length; row++) {
             for (int col = 0; col < blocks[row].length; col++) {
                 if (blocks[row][col] != 0) {
@@ -77,19 +81,22 @@ public class Grid {
                 }
             }
         }
+        logger.info("piece can be played");
         return true;
     }
 
 
 
     /**
-     * if the piece can be played it changes the grid to also git the values of the new piece
+     * method to check if the piece can be played.
+     * It also changes the grid to also fit the values of the new piece
      * @param piece
      * @param centerX
      * @param centerY
      */
     public void playPiece(GamePiece piece, int centerX, int centerY) {
         if (canPlayPiece(piece, centerX, centerY)) {
+            logger.info("piece placed");
             int[][] blocks = piece.getBlocks();
             int centerBlockX = blocks[0].length / 2;
             int centerBlockY = blocks.length / 2;

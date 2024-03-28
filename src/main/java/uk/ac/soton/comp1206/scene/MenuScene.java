@@ -111,11 +111,15 @@ public class MenuScene extends BaseScene {
     @Override
     public void initialise() {
         start.setOnAction(event -> {
+            Multimedia.playAudio("transition.wav");
             gameWindow.startChallenge();
             logger.info("challenge started");
         });
 
-        instructionsButton.setOnAction(event -> gameWindow.startInstructions());
+        instructionsButton.setOnAction(event ->{
+            Multimedia.playAudio("transition.wav");
+            gameWindow.startInstructions();
+        });
     }
 
 

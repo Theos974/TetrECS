@@ -227,7 +227,7 @@ TextField {
 }
 
 .instructions {
-    -fx-font-size: 10px;
+    -fx-font-size: 30px;
     -fx-font-family: 'Orbitron';
     -fx-fill: white;
 }
@@ -272,7 +272,7 @@ TextField {
     -fx-background-color: transparent;
     -fx-text-fill: white;
     -fx-font-family: 'Orbitron';
-    -fx-font-size: 30px;
+    -fx-font-size: 20px;
     -fx-padding: 10px;
     -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 15, 0.5, 0, 0); /* Changed to red glow */
 }
@@ -284,4 +284,24 @@ TextField {
 
 .button-glow-red:pressed {
     -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 5, 0.5, 0, 0); /* Changed to red glow */
+}
+.fancy-button:hover {
+    -fx-background-color: linear-gradient(#ff5400, #d64400);
+}
+.instructions-glow {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-family: 'Orbitron';
+    -fx-font-size: 20px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.8), 15, 0.5, 0, 0);
+}
+
+.instructions-glow:hover {
+    -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.8), 25, 0.7, 0, 0);
+    -fx-cursor: hand;
+}
+
+.instructions-glow:pressed {
+    -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.8), 5, 0.5, 0, 0);
 }

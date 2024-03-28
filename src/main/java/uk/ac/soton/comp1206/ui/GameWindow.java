@@ -88,6 +88,7 @@ public class GameWindow {
      * Display the main menu
      */
     public void startMenu() {
+        Multimedia.stopMusic();
         logger.info("Switching to MenuScene");
         Multimedia.playMusic("menu.mp3");
         loadScene(new MenuScene(this));

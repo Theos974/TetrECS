@@ -11,7 +11,9 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
@@ -24,6 +26,7 @@ import org.apache.logging.log4j.Logger;
 public class InstructionsScene extends BaseScene {
     private static final Logger logger = LogManager.getLogger(InstructionsScene.class);
 
+
     public InstructionsScene(GameWindow gameWindow) {
         super(gameWindow);
     }
@@ -33,70 +36,68 @@ public class InstructionsScene extends BaseScene {
 
         root = new GamePane(gameWindow.getWidth(), gameWindow.getHeight());
 
+        //Base
+        var instructionsPane = new StackPane();
+        instructionsPane.setMaxWidth(gameWindow.getWidth());
+        instructionsPane.setMaxHeight(gameWindow.getHeight());
+        instructionsPane.getStyleClass().add("menu-background3");
 
-        Button backButton = new Button("Back");
-        backButton.getStyleClass().add("button-glow-red");
-        backButton.setOnAction(e -> gameWindow.startMenu());
 
-        // alligns button top left
-        HBox backButtonBox = new HBox(backButton);
-        backButtonBox.setAlignment(Pos.TOP_LEFT);
+        var mainPane = new BorderPane();
 
+        // TOP area
+
+        Text instructionText = new Text("Instructions:");
+
+        HBox topSection = new HBox();
+        topSection.setAlignment(Pos.CENTER);
+
+        instructionText.getStyleClass().add("instructions");
+        topSection.getChildren().add(instructionText);
+        mainPane.setTop(topSection);
+
+
+        //Center area
 
         // Creates an image for the instructions
         Image instructionsImage =
             new Image(getClass().getResourceAsStream("/images/Instructions.png"));
         ImageView instructionsImageView = new ImageView(instructionsImage);
         instructionsImageView.setPreserveRatio(true);
-
         instructionsImageView.setFitWidth(600); // Sets the width or height as needed
-        //places image centered
-        HBox imageBox = new HBox(instructionsImageView);
-        imageBox.setAlignment(Pos.TOP_CENTER);
 
+        var piecesTitle = new Text("Available Pieces:");
+        piecesTitle.getStyleClass().add("instructions-glow");
 
-        //pieces label
-        Label piecesTitle = new Label("Available Pieces:");
-        piecesTitle.getStyleClass().add("button-glow");
+        var centerBox = new VBox();
+        centerBox.setAlignment(Pos.CENTER);
+        mainPane.setCenter(centerBox);
 
         // Creates a GridPane to display PieceBoards
-        GridPane pieceGrid = new GridPane();
-        pieceGrid.setVgap(8);
-        pieceGrid.setHgap(8);
+        var pieceGrid = new VBox();
         pieceGrid.setAlignment(Pos.CENTER);
+        pieceGrid.setSpacing(10);
 
-
-        // Loop to create and display all 15 pieces
-        for (int i = 0; i < 15; i++) {
-            GamePiece piece = GamePiece.createPiece(i);
-            PieceBoard pieceBoard =
-                new PieceBoard(new Game(3, 3), 50, 40);
-
-            pieceBoard.setPiece(piece);
-            pieceGrid.add(pieceBoard, i % 8, i / 8); // Arrange in a grid 5 wide
-
+        //loop to create rows for the pieces
+        for (int i = 0; i < 3; i++) {
+            var pieceRow = new HBox();
+            pieceRow.setAlignment(Pos.CENTER);
+            pieceRow.setSpacing(10);
+            pieceGrid.getChildren().add(pieceRow);
+            logger.info("rows created");
+            // Loop to create and display all 15 pieces
+            for (int y = 0; y < 5; y++) {
+                GamePiece piece = GamePiece.createPiece(i * 5 + y);
+                PieceBoard pieceBoard =
+                    new PieceBoard(new Game(3, 3), 50, 40);
+                pieceBoard.setPiece(piece);
+                pieceRow.getChildren().add(pieceBoard);
+            }
         }
-        logger.info("displaying all 15 pieces");
+        centerBox.getChildren().addAll(instructionsImageView, piecesTitle, pieceGrid);
 
-        VBox piecesLayout = new VBox(10); // Spacing between elements
-        piecesLayout.setAlignment(Pos.CENTER);
-        piecesLayout.getChildren().addAll(piecesTitle, pieceGrid);
-
-        BorderPane mainLayout = new BorderPane();
-        mainLayout.getStyleClass().add("menu-background3");
-
-        //Now sets the combined HBox in Vbox/container for both
-        VBox topContainer = new VBox();
-        topContainer.getChildren().addAll(backButtonBox, imageBox);
-
-        // BorderPane's top set with the container holding both elements
-        mainLayout.setTop(topContainer);
-
-        // Adding the pieces layout in the center of the BorderPane
-        mainLayout.setCenter(piecesLayout);
-
-        // Sets the main layout as the root of the scene
-        root.getChildren().add(mainLayout);
+        root.getChildren().add(instructionsPane);
+        instructionsPane.getChildren().add(mainPane);
     }
 
     @Override
@@ -104,10 +105,12 @@ public class InstructionsScene extends BaseScene {
 
         this.scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ESCAPE) {
+                Multimedia.playAudio("transition.wav");
                 gameWindow.startMenu();
                 logger.info("pressed escape to go back");
             }
         });
+
     }
 
 

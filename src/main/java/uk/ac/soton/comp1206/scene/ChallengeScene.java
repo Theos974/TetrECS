@@ -1,5 +1,6 @@
 package uk.ac.soton.comp1206.scene;
 
+import java.util.HashSet;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
@@ -17,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
+import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 import uk.ac.soton.comp1206.component.GameBoard;
 import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
@@ -34,11 +36,10 @@ public class ChallengeScene extends BaseScene {
     private PieceBoard nextPieceBoard;
     private PieceBoard followingPieceBoard;
 
-    private static final Logger logger = LogManager.getLogger(MenuScene.class);
+    private static final Logger logger = LogManager.getLogger(ChallengeScene.class);
     protected Game game;
-    private IntegerProperty currentAimX = new SimpleIntegerProperty(0);
-    private IntegerProperty currentAimY = new SimpleIntegerProperty(0);
 
+    private int x, y = 0;
 
     /**
      * Create a new Single Player challenge scene
@@ -85,6 +86,7 @@ public class ChallengeScene extends BaseScene {
 
         //Boards
         nextPieceBoard.getStyleClass().add("nextPieceBoard");
+        nextPieceBoard.blocks[1][1].isCenterBlock();
 
         //score
         var scoreBox = new VBox();
@@ -214,34 +216,50 @@ public class ChallengeScene extends BaseScene {
                 case ESCAPE:
                     logger.info("escaped pressed");
                     Multimedia.stopMusic();
+                    Multimedia.playAudio("transition.wav");
                     gameWindow.startMenu();
                     break;
-                case LEFT:
-                    currentAimY.set(Math.max(0, currentAimY.get() - 1));
-                    break;
-                case RIGHT:
-                    currentAimY.set(Math.min(game.getRows() - 1, currentAimY.get() + 1));
-                    break;
+                case W:
                 case UP:
-                    currentAimX.set(Math.max(0, currentAimX.get() - 1));
+                    if (y > 0) {
+                        y--;
+                        board.hover(board.getBlock(x, y));
+                        logger.info("up pressed");
+                    }
                     break;
+                case S:
                 case DOWN:
-                    currentAimX.set(Math.min(game.getCols() - 1, currentAimX.get() + 1));
+                    if (y < game.getRows() - 1) {
+                        y++;
+                        board.hover(board.getBlock(x, y));
+                        logger.info("down pressed");
+
+                    }
+                    break;
+                case A:
+                case LEFT:
+                    if (x > 0) {
+                        x--;
+                        board.hover(board.getBlock(x, y));
+                        logger.info("left pressed");
+                    }
+                    break;
+                case D:
+                case RIGHT:
+                    if (x < game.getCols() - 1) {
+                        x++;
+                        board.hover(board.getBlock(x, y));
+                        logger.info("right pressed");
+
+                    }
                     break;
                 case ENTER, X:
                     dropPiece();
+                    logger.info("key pressed to drop piece");
                     break;
             }
         });
 
-        // Center aim when the game starts or resets
-        centerAim();
-
-        // Update aim on the board when currentAimX or currentAimY changes
-        currentAimX.addListener(
-            (obs, oldVal, newVal) -> board.updateAim(newVal.intValue(), currentAimY.get()));
-        currentAimY.addListener(
-            (obs, oldVal, newVal) -> board.updateAim(currentAimX.get(), newVal.intValue()));
     }
 
     /**
@@ -270,6 +288,15 @@ public class ChallengeScene extends BaseScene {
     }
 
     /**
+     * method to fade out the blocks
+     * @param blocks
+     */
+    private void fade(HashSet<GameBlockCoordinate> blocks) {
+        board.fadeOut(blocks);
+        logger.info("fade activated");
+    }
+
+    /**
      * sets and updates the pieces of the boards with listeners
      */
     private void setPieces() {
@@ -290,22 +317,11 @@ public class ChallengeScene extends BaseScene {
      * method drops the piece on the corresponding block in the board
      */
     private void dropPiece() {
-        int y = currentAimX.get();
-        int x = currentAimY.get();
+
         game.blockClicked(board.getBlock(x, y));
-        logger.info("piece was dropped using the keyboard");
+        logger.info("dropPiece method for keyBoard used");
     }
 
-    /**
-     * method centers the aim when keyboard is used
-      */
-    private void centerAim() {
-        // Set aim to the center of the board
-        currentAimX.set(game.getCols() / 2);
-        currentAimY.set(game.getRows() / 2);
-        board.updateAim(currentAimX.get(), currentAimY.get());
-        logger.info("keyboard used/aim is centered");
-    }
 
     /**
      * Initialise the scene and start the game
@@ -318,6 +334,7 @@ public class ChallengeScene extends BaseScene {
         nextPieceBoard.setPiece(game.getCurrentPiece()); // initialised first piece
         followingPieceBoard.setPiece(game.getFollowingPiece());//initialise following piece
         logger.info("next pieces initialised");
+        game.setOnLineClearedListener(this::fade); //sets the listener to clear line
         setPieces();
         handleClick();
         setKeyboard();

@@ -10,6 +10,7 @@ import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 import uk.ac.soton.comp1206.event.FollowingPieceListener;
+import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
 
 /**
@@ -40,6 +41,8 @@ public class Game {
     private static final int POINTS_PER_LEVEL = 1000;
     private NextPieceListener nextPieceListener;
     private FollowingPieceListener followingPieceListener;
+    private LineClearedListener lineClearedListener = null;
+
     private boolean swoosh = false;
 
     private final IntegerProperty score = new SimpleIntegerProperty(0);
@@ -129,7 +132,7 @@ public class Game {
     }
 
     /**
-     * Handle what should happen when a particular block is clicked
+     * Handles what should happen when a particular block is clicked
      *
      * @param gameBlock the block that was clicked
      */
@@ -140,7 +143,7 @@ public class Game {
 
         if (grid.canPlayPiece(currentPiece, x, y)) {
 
-            logger.info("Attempting to place piece");
+
 
             grid.playPiece(currentPiece, x, y);
 
@@ -234,7 +237,8 @@ public class Game {
 
     /**
      * The method returns the current piece
-      * @return currentPiece
+     *
+     * @return currentPiece
      */
     public GamePiece getCurrentPiece() {
         return currentPiece;
@@ -242,6 +246,7 @@ public class Game {
 
     /**
      * returns the next piece after the current one
+     *
      * @return followingPiece
      */
     public GamePiece getFollowingPiece() {
@@ -336,7 +341,9 @@ public class Game {
             // swoosh flag becomes true
             swoosh = true;
         }
-
+        if (lineClearedListener != null) {
+            lineClearedListener.clearLines(blocksToClear);
+        }
         for (GameBlockCoordinate cord : blocksToClear) { //clears the blocks
             grid.set(cord.getX(), cord.getY(), 0);
         }
@@ -376,7 +383,8 @@ public class Game {
 
 
     /**
-     *  Method to set the current piece listener
+     * Method to set the current piece listener
+     *
      * @param listener
      */
     public void setOnNextPieceListener(NextPieceListener listener) {
@@ -384,26 +392,42 @@ public class Game {
     }
 
 
+    /**
+     * triggers the listener to act
+      * @param piece
+     */
     private void triggerNextPieceListener(GamePiece piece) {
         if (nextPieceListener != null) {
             nextPieceListener.nextPiece(piece);
         }
     }
 
+    /**
+     * triggers the listener to act
+     * @param piece
+     */
     private void triggerFollowingPieceListener(GamePiece piece) {
         if (followingPieceListener != null) {
             followingPieceListener.nextPiece(piece);
         }
     }
 
-
-
     /**
-     *  Method to set the following piece listener
+     * Method to set the following piece listener
+     *
      * @param listener
      */
     public void setOnFollowingPieceListener(FollowingPieceListener listener) {
         this.followingPieceListener = listener;
     }
 
+    /**
+     * sets the lineCleared listener
+     * @param listener
+     */
+    public void setOnLineClearedListener(LineClearedListener listener) {
+        this.lineClearedListener = listener;
+    }
+
 }
+

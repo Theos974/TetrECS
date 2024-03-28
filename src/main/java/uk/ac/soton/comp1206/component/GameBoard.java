@@ -1,5 +1,6 @@
 package uk.ac.soton.comp1206.component;
 
+import java.util.HashSet;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
@@ -51,7 +52,7 @@ public class GameBoard extends GridPane {
     /**
      * The blocks inside the grid
      */
-    GameBlock[][] blocks;
+    public GameBlock[][] blocks;
 
     /**
      * The listener to call when a specific block is clicked
@@ -159,30 +160,35 @@ public class GameBoard extends GridPane {
         block.setOnMouseEntered((e) -> hover(block));
 
         // Remove hover effect when cursor is not on grid
-        block.setOnMouseExited((e) -> block.setHovered(true));
-
+        block.setOnMouseExited((e) -> block.removeHover());
 
 
         return block;
     }
+
+    /**
+     * handles which blocks need to be faded out ( to clear a line)
+     * @param blocksToClear contains the block coordinates to fade out
+     */
+    public void fadeOut(HashSet<GameBlockCoordinate> blocksToClear) {
+        for (GameBlockCoordinate coord : blocksToClear) { //clears the blocks
+            getBlock(coord.getX(), coord.getY()).fadeOut();
+        }
+
+    }
+
+    /**
+     * handles  whether a block is hovered on or not
+     * @param gameBlock
+     */
     public void hover(GameBlock gameBlock) {
         if (hovering != null) {
-            hovering.setHovered(false);
+            hovering.removeHover();
         }
         hovering = gameBlock;
         gameBlock.setHovered(true);
     }
-    public void updateAim(int x, int y) {
-        // Remove highlight from all blocks
-        for (GameBlock[] blockRow : blocks) {
-            for (GameBlock block : blockRow) {
-                block.setHovered(false);
-            }
-        }
 
-        // Highlight the block at the current aim
-        blocks[y][x].setHovered(true);
-    }
     /**
      * Set the listener to handle an event when a block is left-clicked
      *
@@ -194,6 +200,7 @@ public class GameBoard extends GridPane {
 
     /**
      * sets listener to handle event when block is right-clicked
+     *
      * @param listener
      */
     public void setOnRightClick(RightClickListener listener) {
@@ -203,7 +210,7 @@ public class GameBoard extends GridPane {
 
     /**
      * Triggered when a block is clicked. Call the attached listener.
-     *
+     * handles whether the block was clicked with a left/right click
      * @param event mouse event
      * @param block block clicked on
      */
@@ -212,16 +219,18 @@ public class GameBoard extends GridPane {
         if (event.getButton().equals(MouseButton.PRIMARY)) {
             if (blockClickedListener != null) {
                 blockClickedListener.blockClicked(block);
+                logger.info("left click");
             }
         }
         if (event.getButton().equals(MouseButton.SECONDARY)) {
             if (rightClickedListener != null) {
                 rightClickedListener.rightClicked();
+                logger.info("right click");
             }
         }
     }
 
-    }
+}
 
 
 
