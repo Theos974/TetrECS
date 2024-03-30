@@ -15,6 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import uk.ac.soton.comp1206.App;
 import uk.ac.soton.comp1206.Multimedia;
+import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.scene.*;
@@ -39,7 +40,6 @@ public class GameWindow {
     private Scene scene;
 
     final Communicator communicator;
-
 
 
     /**
@@ -132,9 +132,24 @@ public class GameWindow {
         logger.info("menu music stopped");
         loadScene(new ChallengeScene(this));
     }
+
+    /**
+     * loads the instruction scene
+     */
     public void startInstructions() {
         InstructionsScene instructionsScene = new InstructionsScene(this);
         loadScene(instructionsScene);
+    }
+
+    public void startScoreScene(Game game) {
+
+        logger.info("displaying score Scene");
+        Multimedia.stopMusic();
+        Multimedia.playMusic("end.wav");
+        var scoresScene = new ScoresScene(this, game);
+        loadScene(scoresScene);
+
+
     }
 
 

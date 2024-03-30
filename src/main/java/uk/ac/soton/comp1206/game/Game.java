@@ -2,6 +2,11 @@ package uk.ac.soton.comp1206.game;
 
 import java.util.HashSet;
 import java.util.Random;
+import java.util.Timer;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.logging.log4j.LogManager;
@@ -10,8 +15,10 @@ import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 import uk.ac.soton.comp1206.event.FollowingPieceListener;
+import uk.ac.soton.comp1206.event.GameLoopListener;
 import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
+import uk.ac.soton.comp1206.ui.GameWindow;
 
 /**
  * The Game class handles the main logic, state and properties of the TetrECS game. Methods to manipulate the game state
@@ -42,8 +49,10 @@ public class Game {
     private NextPieceListener nextPieceListener;
     private FollowingPieceListener followingPieceListener;
     private LineClearedListener lineClearedListener = null;
+    private GameLoopListener gameLoopListener;
 
     private boolean swoosh = false;
+    GameWindow gameWindow;
 
     private final IntegerProperty score = new SimpleIntegerProperty(0);
     private final IntegerProperty level = new SimpleIntegerProperty(0);
@@ -98,6 +107,10 @@ public class Game {
         return multiplier;
     }
 
+    private  ScheduledExecutorService executorService =
+        Executors.newSingleThreadScheduledExecutor();
+    private Runnable gameLoop;
+
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -129,6 +142,7 @@ public class Game {
         logger.info("Initialising game");
         currentPiece = spawnPiece();
         followingPiece = spawnPiece();
+        startGameLoop();
     }
 
     /**
@@ -143,9 +157,8 @@ public class Game {
 
         if (grid.canPlayPiece(currentPiece, x, y)) {
 
-
-
             grid.playPiece(currentPiece, x, y);
+            resetGameLoop();
 
             afterPiece(); //checks for full lines after playing the piece
             if (swoosh) {
@@ -394,7 +407,8 @@ public class Game {
 
     /**
      * triggers the listener to act
-      * @param piece
+     *
+     * @param piece
      */
     private void triggerNextPieceListener(GamePiece piece) {
         if (nextPieceListener != null) {
@@ -404,6 +418,7 @@ public class Game {
 
     /**
      * triggers the listener to act
+     *
      * @param piece
      */
     private void triggerFollowingPieceListener(GamePiece piece) {
@@ -423,11 +438,106 @@ public class Game {
 
     /**
      * sets the lineCleared listener
+     *
      * @param listener
      */
     public void setOnLineClearedListener(LineClearedListener listener) {
         this.lineClearedListener = listener;
     }
+
+    /**
+     * calculates the delay per level
+     *
+     * @return the delay
+     */
+    public int getTimerDelay() {
+        int baseDelay = 12000;
+        int level = getLevel();
+        int delayDecreasePerLevel = 500;
+        int minDelay = 2500;
+        int delay = baseDelay - (level * delayDecreasePerLevel);
+
+        return Math.max(delay, minDelay); // Ensure we don't go below the minimum delay
+
+    }
+
+    /**
+     * starts the game loop
+     */
+    public void startGameLoop() {
+        gameLoop = this::gameLoop;
+        scheduleNextLoop(getTimerDelay());
+    }
+
+    /**
+     * schedules next loop
+     * @param delay
+     */
+    private void scheduleNextLoop(int delay) {
+        executorService.schedule(gameLoop, delay, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * manages each game loop
+     */
+    private void gameLoop() {
+        // What happens in each loop
+        // Lose a life, discard the current piece, reset multiplier, check if game should end
+        setLives(getLives() - 1);
+
+        if (getLives() == 0) {
+            endGame();
+        } else {
+            setMultiplier(1);
+            nextPiece();
+
+            if (gameLoopListener != null) {
+                gameLoopListener.onGameLoop();
+            }
+
+
+            // Reschedules the next loop
+            scheduleNextLoop(getTimerDelay());
+
+        }
+
+    }
+    public void setOnGameLoopListener(GameLoopListener listener){
+        this.gameLoopListener = listener;
+    }
+
+    /**
+     * method to reset timeLoop when block is placed
+     */
+    private void resetGameLoop() {
+        if (executorService != null && !executorService.isShutdown()) {
+            // First, cancel any existing game loop tasks
+            executorService.shutdownNow();
+            // Then, restart the executor service
+            executorService = Executors.newSingleThreadScheduledExecutor();
+            // Finally, schedule the next loop with the correct delay for the current level
+            scheduleNextLoop(getTimerDelay());
+        }
+    }
+
+
+
+    /**
+     * method to handle transitioning to scoreScene after game has ended
+     */
+    public void endGame() {
+
+        // Shutdown the scheduled tasks
+        executorService.shutdown();
+
+        // Pass the current Game instance to the score screen
+        // Ensures the UI transitions to the scores scene on the JavaFX Application Thread
+        Platform.runLater(() -> {
+            gameWindow.startScoreScene(this);
+        });
+
+    }
+
 
 }
 

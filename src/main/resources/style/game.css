@@ -108,7 +108,7 @@
     -fx-effect: dropshadow(gaussian, black, 1, 1.0, 1, 1);
 }
 
-.hiscore {
+.hi-score {
     -fx-fill: orange;
     -fx-font-family: 'Orbitron';
     -fx-font-size: 24px;
@@ -130,7 +130,7 @@
     -fx-effect: dropshadow(gaussian, black, 1, 1.0, 1, 1);
 }
 
-.scorelist {
+.score-list {
     -fx-font-size: 20px;
     -fx-font-family: 'Orbitron';
 }
