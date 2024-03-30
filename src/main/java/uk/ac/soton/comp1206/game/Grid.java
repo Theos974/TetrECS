@@ -95,8 +95,9 @@ public class Grid {
      * @param centerY
      */
     public void playPiece(GamePiece piece, int centerX, int centerY) {
+        logger.info("piece placed");
         if (canPlayPiece(piece, centerX, centerY)) {
-            logger.info("piece placed");
+
             int[][] blocks = piece.getBlocks();
             int centerBlockX = blocks[0].length / 2;
             int centerBlockY = blocks.length / 2;

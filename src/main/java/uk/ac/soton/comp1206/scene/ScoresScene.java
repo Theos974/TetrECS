@@ -37,6 +37,8 @@ public class ScoresScene extends BaseScene {
     static final Logger logger = LogManager.getLogger(ScoresScene.class);
     private Game game;
     VBox centerBox = new VBox();
+    VBox titleBox;
+    private final Label leaderBoard = new Label("LeaderBoard");
 
     private ListProperty<Pair<String, Integer>> localScoresList;
 
@@ -68,8 +70,9 @@ public class ScoresScene extends BaseScene {
 
         //Top
         Label title = new Label("GAME OVER");
-        title.getStyleClass().add("button-glow-red");
-        var titleBox = new HBox(title);
+        title.getStyleClass().add("heading-glow-red");
+        titleBox = new VBox(title);
+
         titleBox.setAlignment(Pos.CENTER);
         mainPane.setTop(titleBox);
 
@@ -182,9 +185,15 @@ public class ScoresScene extends BaseScene {
         if (checkForHighScore()) {
             // Show prompt for name entry
             var highScoreLabel = new Label("New High Score Achieved!");
-            highScoreLabel.getStyleClass().add("heading");
-            var enterName = new TextField("Enter your Name:");
+            highScoreLabel.getStyleClass().add("headingLeaderBoard");
+            var enterName = new TextField();
             enterName.getStyleClass().add("TextField");
+            enterName.setPromptText("Enter your Name:"); // Use prompt text instead of setting text
+            enterName.textProperty().addListener((observable, oldValue, newValue) -> {
+                if (!newValue.isEmpty()) {
+                    enterName.setPromptText(""); // Clear prompt text when user starts typing
+                }
+            });
             var confirmButton = new Button("Confirm");
             confirmButton.getStyleClass().add("button-glow");
             centerBox.setPadding(new Insets(10, 10, 10, 10));
@@ -226,6 +235,8 @@ public class ScoresScene extends BaseScene {
         // If no new high score, just show the existing scores
         Multimedia.stopMusic();
         Multimedia.playMusic("end.wav");
+        titleBox.getChildren().add(leaderBoard);
+        leaderBoard.getStyleClass().add("headingLeaderBoard");
         centerBox.getChildren().add(scoresList);
         scoresList.revealScores();
     }

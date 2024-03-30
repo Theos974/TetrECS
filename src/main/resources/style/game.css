@@ -133,6 +133,10 @@
 .score-list {
     -fx-font-size: 20px;
     -fx-font-family: 'Orbitron';
+    -fx-font-weight: 700;
+    -fx-stroke: black;
+    -fx-text-alignment: center;
+    -fx-effect: dropshadow(gaussian, black, 1, 1.0, 1, 1);
 }
 
 .scoreitem {
@@ -268,11 +272,13 @@ TextField {
 .button-glow:pressed {
     -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.8), 5, 0.5, 0, 0);
 }
+
+
 .button-glow-red {
     -fx-background-color: transparent;
     -fx-text-fill: white;
     -fx-font-family: 'Orbitron';
-    -fx-font-size: 20px;
+    -fx-font-size: 30px;
     -fx-padding: 10px;
     -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 15, 0.5, 0, 0); /* Changed to red glow */
 }
@@ -285,9 +291,45 @@ TextField {
 .button-glow-red:pressed {
     -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 5, 0.5, 0, 0); /* Changed to red glow */
 }
-.fancy-button:hover {
-    -fx-background-color: linear-gradient(#ff5400, #d64400);
+
+
+.glow-red {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-family: 'Orbitron';
+    -fx-font-size: 20px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 15, 0.5, 0, 0); /* Changed to red glow */
 }
+
+.glow-red:hover {
+    -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 25, 0.7, 0, 0); /* Changed to red glow */
+    -fx-cursor: hand;
+}
+
+.glow-red:pressed {
+    -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 5, 0.5, 0, 0); /* Changed to red glow */
+}
+
+
+.heading-glow-red {
+    -fx-background-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-family: 'Orbitron';
+    -fx-font-size: 60px;
+    -fx-padding: 10px;
+    -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 15, 0.5, 0, 0); /* Changed to red glow */
+}
+
+.heading-glow-red:hover {
+    -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 25, 0.7, 0, 0); /* Changed to red glow */
+    -fx-cursor: hand;
+}
+
+.heading-glow-red:pressed {
+    -fx-effect: dropshadow(gaussian, rgba(255,0,0,0.8), 5, 0.5, 0, 0); /* Changed to red glow */
+}
+
 .instructions-glow {
     -fx-background-color: transparent;
     -fx-text-fill: white;
@@ -305,3 +347,29 @@ TextField {
 .instructions-glow:pressed {
     -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.8), 5, 0.5, 0, 0);
 }
+/* Timer Bar */
+.timer-bar {
+    -fx-background-color: linear-gradient(from 0% 50% to 100% 50%, #76b852, #8DC26F);
+    -fx-background-radius: 5;
+}
+
+.headingLeaderBoard {
+    -fx-font-size: 40px;
+    -fx-text-fill: white; /* Golden color */
+    -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.8), 15, 0, 0, 0);
+}
+
+.score-item {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: linear-gradient(to right, #4facfe 0%, #00f2fe 100%);
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.7), 10, 0, 0, 1);
+}
+.leaderboard-label {
+    -fx-font-size: 24px;
+    -fx-text-fill: #ffa07a; /* Light Salmon color */
+    -fx-effect: dropshadow(gaussian, rgba(255,160,122,0.8), 15, 0.5, 0, 1);
+}
+
+
+

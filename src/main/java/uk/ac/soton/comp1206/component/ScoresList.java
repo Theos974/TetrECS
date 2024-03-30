@@ -1,6 +1,9 @@
 package uk.ac.soton.comp1206.component;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import javafx.animation.FadeTransition;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
@@ -11,6 +14,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -41,14 +45,36 @@ public class ScoresList extends VBox {
     }
 
     public void updateScoreListView() {
-
         this.getChildren().clear();
+
+        // Define and populate the list of colors
+        List<String> colors = new ArrayList<>();
+        colors.add("#FF6347"); // tomato
+        colors.add("#1E90FF"); // dodgerblue
+        colors.add("#32CD32"); // limegreen
+        colors.add("#FFD700"); // gold
+        colors.add("#FF69B4"); // hotpink
+        colors.add("#6A5ACD"); // slateblue
+        // ... add as many colors as you like
+
+        // Shuffle the list of colors
+        Collections.shuffle(colors);
+
+        // Use an index to iterate through the shuffled list of colors
+        int colorIndex = 0;
+
         for (Pair<String, Integer> score : scoresProperty) {
             Label scoreLabel = new Label(score.getKey() + ": " + score.getValue());
-            scoreLabel.getStyleClass().add("menuItem");
+            scoreLabel.getStyleClass().add("score-list");
+
+            // Apply color from the shuffled list, and increment the color index
+            scoreLabel.setStyle("-fx-text-fill: " + colors.get(colorIndex) + "; -fx-font-weight: bold;");
+
+            // Make sure the index wraps around if it exceeds the number of colors
+            colorIndex = (colorIndex + 1) % colors.size();
+
             this.getChildren().add(scoreLabel);
         }
-
     }
 
 

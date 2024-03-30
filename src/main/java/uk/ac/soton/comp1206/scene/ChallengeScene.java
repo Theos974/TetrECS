@@ -45,7 +45,7 @@ public class ChallengeScene extends BaseScene {
 
     private PieceBoard nextPieceBoard;
     private PieceBoard followingPieceBoard;
-    private Rectangle timerBar;
+    private Pane timerBar;
     private Timeline timeline;
 
 
@@ -159,7 +159,7 @@ public class ChallengeScene extends BaseScene {
         var title = new Text("Challenge Mode");
         title.getStyleClass().add("button-glow");
         var incomingText = new Text("Incoming");
-        incomingText.getStyleClass().add("button-glow-red");
+        incomingText.getStyleClass().add("glow-red");
 
         //Top section
         var topSection = new HBox(140);
@@ -188,11 +188,12 @@ public class ChallengeScene extends BaseScene {
 
         //Bottom
         var timerBox = new HBox();
-        timerBar = new Rectangle();
-        timerBar.setHeight(10);
+        timerBar = new Pane();
+        timerBar.setPrefHeight(10); // Set the preferred height
+        timerBar.getStyleClass().add("timer-bar"); // This is your CSS class for styling
+
         timerBox.getChildren().add(timerBar);
         mainPane.setBottom(timerBox);
-
 
         BorderPane.setMargin(board, new Insets(0, 0, 0, 30));
 
@@ -216,7 +217,12 @@ public class ChallengeScene extends BaseScene {
      * @param gameBlock the Game Block that was clocked
      */
     private void blockClicked(GameBlock gameBlock) {
-        game.blockClicked(gameBlock);
+        boolean success = game.blockClicked(gameBlock);
+        if (success) {
+            resetTimerBar();
+            game.resetGameLoop();
+        }
+
     }
 
     /**
@@ -292,8 +298,6 @@ public class ChallengeScene extends BaseScene {
                     dropPiece();
                     logger.info("key pressed to drop piece");
                     break;
-                case G:
-                    gameWindow.startScoreScene(game);
             }
         });
 
@@ -387,20 +391,21 @@ public class ChallengeScene extends BaseScene {
         double fullBarWidth = gameWindow.getWidth();
         double timeInterval = game.getTimerDelay();
 
-        // Create the animation to shrink the timer bar's width over the time interval
+        // Create the animation to shrink the timer bar's preferred width over the time interval
         timeline = new Timeline(
             new KeyFrame(
                 Duration.ZERO, // Start at 0 millis
-                new KeyValue(timerBar.widthProperty(), fullBarWidth) // Start with full width
+                new KeyValue(timerBar.prefWidthProperty(), fullBarWidth) // Start with full width
             ),
             new KeyFrame(
                 Duration.millis(timeInterval), // End at the delay interval
-                new KeyValue(timerBar.widthProperty(), 0) // End with width of 0
+                new KeyValue(timerBar.prefWidthProperty(), 0) // End with width of 0
             )
         );
         timeline.setCycleCount(1); // Only play once per call
         timeline.play();
     }
+
 
     private void resetTimerBar() {
         if (timeline != null) {
@@ -409,6 +414,9 @@ public class ChallengeScene extends BaseScene {
         updateTimerBar(); // Create and start a new animation
     }
 
+    private void gameOver() {
+        gameWindow.startScoreScene(game);
+    }
 
 
     /**
@@ -430,8 +438,7 @@ public class ChallengeScene extends BaseScene {
         setKeyboard();
         game.setOnGameLoopListener(this::resetTimerBar);
         resetTimerBar();
-
-
+        game.setGameOverListener(this::gameOver);
 
 
     }

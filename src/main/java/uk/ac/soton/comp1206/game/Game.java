@@ -16,6 +16,7 @@ import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 import uk.ac.soton.comp1206.event.FollowingPieceListener;
 import uk.ac.soton.comp1206.event.GameLoopListener;
+import uk.ac.soton.comp1206.event.GameOverListener;
 import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
 import uk.ac.soton.comp1206.ui.GameWindow;
@@ -50,6 +51,7 @@ public class Game {
     private FollowingPieceListener followingPieceListener;
     private LineClearedListener lineClearedListener = null;
     private GameLoopListener gameLoopListener;
+    private GameOverListener gameOverListener;
 
     private boolean swoosh = false;
     GameWindow gameWindow;
@@ -107,7 +109,7 @@ public class Game {
         return multiplier;
     }
 
-    private  ScheduledExecutorService executorService =
+    private ScheduledExecutorService executorService =
         Executors.newSingleThreadScheduledExecutor();
     private Runnable gameLoop;
 
@@ -150,7 +152,7 @@ public class Game {
      *
      * @param gameBlock the block that was clicked
      */
-    public void blockClicked(GameBlock gameBlock) {
+    public boolean blockClicked(GameBlock gameBlock) {
         //Get the position of this block
         int x = gameBlock.getX();
         int y = gameBlock.getY();
@@ -158,7 +160,6 @@ public class Game {
         if (grid.canPlayPiece(currentPiece, x, y)) {
 
             grid.playPiece(currentPiece, x, y);
-            resetGameLoop();
 
             afterPiece(); //checks for full lines after playing the piece
             if (swoosh) {
@@ -167,9 +168,10 @@ public class Game {
                 Multimedia.playAudio("place.wav");
             }
             nextPiece(); //gets the next piece
+            return true;
         } else {
             logger.info("Piece cannot be played at the specified at " + x + ", " + y);
-
+            return false;
         }
 
 
@@ -471,6 +473,7 @@ public class Game {
 
     /**
      * schedules next loop
+     *
      * @param delay
      */
     private void scheduleNextLoop(int delay) {
@@ -484,13 +487,14 @@ public class Game {
         // What happens in each loop
         // Lose a life, discard the current piece, reset multiplier, check if game should end
         setLives(getLives() - 1);
-
+        Multimedia.playAudio("lifelose.wav");
         if (getLives() == 0) {
+            logger.info("inside gameLoop 0 lives");
             endGame();
         } else {
             setMultiplier(1);
             nextPiece();
-
+            logger.info("oops timer to 0");
             if (gameLoopListener != null) {
                 gameLoopListener.onGameLoop();
             }
@@ -502,40 +506,39 @@ public class Game {
         }
 
     }
-    public void setOnGameLoopListener(GameLoopListener listener){
+
+    public void setOnGameLoopListener(GameLoopListener listener) {
         this.gameLoopListener = listener;
+    }
+    public void setGameOverListener(GameOverListener listener){
+        this.gameOverListener = listener;
     }
 
     /**
      * method to reset timeLoop when block is placed
      */
-    private void resetGameLoop() {
+    public void resetGameLoop() {
+        logger.info("Attempting to reset the game loop");
         if (executorService != null && !executorService.isShutdown()) {
-            // First, cancel any existing game loop tasks
-            executorService.shutdownNow();
-            // Then, restart the executor service
+            executorService.shutdownNow(); // Immediately stop all currently executing tasks
             executorService = Executors.newSingleThreadScheduledExecutor();
-            // Finally, schedule the next loop with the correct delay for the current level
-            scheduleNextLoop(getTimerDelay());
+            scheduleNextLoop(getTimerDelay()); // Reschedule the loop with the current delay
+        } else {
+            logger.info("Executor service is null or already shut down.");
         }
     }
-
 
 
     /**
      * method to handle transitioning to scoreScene after game has ended
      */
     public void endGame() {
-
         // Shutdown the scheduled tasks
         executorService.shutdown();
-
-        // Pass the current Game instance to the score screen
-        // Ensures the UI transitions to the scores scene on the JavaFX Application Thread
-        Platform.runLater(() -> {
-            gameWindow.startScoreScene(this);
-        });
-
+        // Notify that the game is over
+        if (gameOverListener != null) {
+            Platform.runLater(() -> gameOverListener.gameOver());
+        }
     }
 
 
