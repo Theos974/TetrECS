@@ -5,21 +5,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashSet;
 import javafx.animation.Animation;
+import javafx.animation.FillTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.ListChangeListener;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 
-import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
 import javafx.scene.layout.*;
-import javafx.scene.shape.Box;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.util.Duration;
@@ -30,9 +26,7 @@ import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 import uk.ac.soton.comp1206.component.GameBoard;
 import uk.ac.soton.comp1206.component.PieceBoard;
-import uk.ac.soton.comp1206.component.ScoresList;
 import uk.ac.soton.comp1206.game.Game;
-import uk.ac.soton.comp1206.game.Grid;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
@@ -45,7 +39,7 @@ public class ChallengeScene extends BaseScene {
 
     private PieceBoard nextPieceBoard;
     private PieceBoard followingPieceBoard;
-    private Pane timerBar;
+    private Rectangle timerBar;
     private Timeline timeline;
 
 
@@ -188,9 +182,9 @@ public class ChallengeScene extends BaseScene {
 
         //Bottom
         var timerBox = new HBox();
-        timerBar = new Pane();
-        timerBar.setPrefHeight(10); // Set the preferred height
-        timerBar.getStyleClass().add("timer-bar"); // This is your CSS class for styling
+        timerBar = new Rectangle(0, 0, gameWindow.getWidth(), 15); // Assuming a height of 15 pixels
+        timerBar.prefHeight(10); 
+        timerBar.getStyleClass().add("timer-bar");
 
         timerBox.getChildren().add(timerBar);
         mainPane.setBottom(timerBox);
@@ -298,6 +292,8 @@ public class ChallengeScene extends BaseScene {
                     dropPiece();
                     logger.info("key pressed to drop piece");
                     break;
+                case G:
+                    gameWindow.startScoreScene(game);
             }
         });
 
@@ -360,7 +356,11 @@ public class ChallengeScene extends BaseScene {
      */
     private void dropPiece() {
 
-        game.blockClicked(board.getBlock(x, y));
+        boolean success = game.blockClicked(board.getBlock(x, y));
+        if (success) {
+            resetTimerBar();
+            game.resetGameLoop();
+        }
         logger.info("dropPiece method for keyBoard used");
     }
 
@@ -391,20 +391,33 @@ public class ChallengeScene extends BaseScene {
         double fullBarWidth = gameWindow.getWidth();
         double timeInterval = game.getTimerDelay();
 
-        // Create the animation to shrink the timer bar's preferred width over the time interval
+        // Update the animation to shrink the timer bar's width over the time interval
         timeline = new Timeline(
             new KeyFrame(
-                Duration.ZERO, // Start at 0 millis
-                new KeyValue(timerBar.prefWidthProperty(), fullBarWidth) // Start with full width
+                Duration.ZERO,
+                new KeyValue(timerBar.widthProperty(), fullBarWidth),
+                new KeyValue(timerBar.fillProperty(), Color.GREEN) // Start with green color
             ),
             new KeyFrame(
-                Duration.millis(timeInterval), // End at the delay interval
-                new KeyValue(timerBar.prefWidthProperty(), 0) // End with width of 0
+                Duration.millis(timeInterval * 0.7), // At 70% of the time interval
+                new KeyValue(timerBar.fillProperty(), Color.YELLOW) // Change to yellow color
+            ),
+            new KeyFrame(
+                Duration.millis(timeInterval), // At 100% of the time interval
+                new KeyValue(timerBar.widthProperty(), 0),
+                new KeyValue(timerBar.fillProperty(), Color.RED) // Change to red color
             )
         );
-        timeline.setCycleCount(1); // Only play once per call
+
+        // Flashing effect when the time is almost up
+        FillTransition fillTransition = new FillTransition(Duration.millis(300), timerBar, Color.RED, Color.ORANGE);
+        fillTransition.setCycleCount(Animation.INDEFINITE);
+        fillTransition.setAutoReverse(true);
+
+        timeline.setOnFinished(e -> fillTransition.play()); // Start flashing when timeline finishes
         timeline.play();
     }
+
 
 
     private void resetTimerBar() {

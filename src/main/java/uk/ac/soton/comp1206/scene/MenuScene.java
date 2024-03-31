@@ -30,6 +30,7 @@ public class MenuScene extends BaseScene {
     private static final Logger logger = LogManager.getLogger(MenuScene.class);
     private Button start;
     private Button instructionsButton;
+    private Button multiplayerButton;
 
     /**
      * Create a new menu scene
@@ -95,11 +96,14 @@ public class MenuScene extends BaseScene {
         instructionsButton = new Button("How to Play");
         instructionsButton.getStyleClass().add("button-glow");
 
+        multiplayerButton = new Button("Multiplayer");
+        multiplayerButton.getStyleClass().add("button-glow");
+
 
         VBox buttonBox = new VBox(10);
         buttonBox.setAlignment(Pos.CENTER);
         //centering the buttons
-        buttonBox.getChildren().addAll(start, instructionsButton);
+        buttonBox.getChildren().addAll(start,multiplayerButton, instructionsButton);
         mainPane.setCenter(buttonBox);
 
     }

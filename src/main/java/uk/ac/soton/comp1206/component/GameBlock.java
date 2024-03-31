@@ -124,6 +124,7 @@ public class GameBlock extends Canvas {
         } else {
             //If the block is not empty, paint with the colour represented by the value
             paintColor(COLOURS[value.get()]);
+
             if (centre) { //if centre is true it draws the center indicator on current PieceBoard
                 drawCenterIndicator();
                 logger.info("center indicator drawn");

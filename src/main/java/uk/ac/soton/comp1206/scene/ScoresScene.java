@@ -8,6 +8,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
@@ -27,6 +28,7 @@ import javafx.util.Pair;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.ScoresList;
 import uk.ac.soton.comp1206.game.Game;
+import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 import org.apache.logging.log4j.LogManager;
@@ -37,10 +39,14 @@ public class ScoresScene extends BaseScene {
     static final Logger logger = LogManager.getLogger(ScoresScene.class);
     private Game game;
     VBox centerBox = new VBox();
+    HBox leaderBoardsBox = new HBox();
     VBox titleBox;
     private final Label leaderBoard = new Label("LeaderBoard");
 
     private ListProperty<Pair<String, Integer>> localScoresList;
+    private ListProperty<Pair<String, Integer>> remoteScoresList =
+        new SimpleListProperty<>(FXCollections.observableArrayList());
+    private Communicator communicator;
 
 
     public ScoresScene(GameWindow gameWindow, Game game) {
@@ -49,7 +55,7 @@ public class ScoresScene extends BaseScene {
         this.localScoresList = new SimpleListProperty<>(FXCollections.observableArrayList());
         this.scoresList = new ScoresList();
         scoresList.bindScores(localScoresList);
-
+        communicator = gameWindow.getCommunicator();
         loadScores();
 
     }
@@ -78,7 +84,7 @@ public class ScoresScene extends BaseScene {
 
         //Center
         centerBox.setAlignment(Pos.CENTER);
-        centerBox.setSpacing(10);
+        centerBox.setSpacing(20);
         mainPane.setCenter(centerBox);
 
         /* Bottom */
@@ -115,6 +121,9 @@ public class ScoresScene extends BaseScene {
 
         loadScores();
         promptForName();
+        loadOnlineScores();
+        communicator.addListener(this::handleCommunication);
+
 
         scene.setOnKeyPressed(e -> {
             if (e.getCode() == KeyCode.ESCAPE) {
@@ -156,6 +165,51 @@ public class ScoresScene extends BaseScene {
         }
     }
 
+    public void loadOnlineScores() {
+        communicator.send("HISCORES");
+
+    }
+
+    //Method to write the current score into the communicator
+    private void writeOnlineScore(String name, Integer score) {
+        communicator.send("HISCORE " + name + ":" + score);
+    }
+
+    public void handleCommunication(String message) {
+
+        Platform.runLater(() -> {
+            String[] lines = message.split("\n");
+            remoteScoresList.clear(); // Clear previous scores
+            for (String line : lines) {
+                String[] parts = line.split(":");
+                if (parts.length == 2) {
+                    try {
+                        String name = parts[0];
+                        int score = Integer.parseInt(parts[1]);
+                        remoteScoresList.add(new Pair<>(name, score));
+                    } catch (NumberFormatException e) {
+                        logger.error("Failed to parse score from server: " + line, e);
+                    }
+                }
+            }
+            remoteScoresList.sort((p1, p2) -> p2.getValue().compareTo(p1.getValue()));
+
+        });
+    }
+/*
+    // This is a mock method for testing purposes.
+    public void testSubmitHighScore() {
+        String testPlayerName = "Prokopis";
+        int testScore = 22000; // A score that's guaranteed to be a high score for testing.
+
+        // Call the method that handles high score submission
+        writeOnlineScore(testPlayerName, testScore);
+        loadOnlineScores();
+        // Here you can put any additional logic you need to verify the submission.
+        logger.info("Test high score submitted: " + testPlayerName + " - " + testScore);
+    }
+*/
+
     public void writeScores(List<Pair<String, Integer>> playerScores) {
         File f = new File("localScores.txt");
 
@@ -174,10 +228,16 @@ public class ScoresScene extends BaseScene {
         } catch (IOException e) {
             logger.error("An error occurred while writing to scores file.", e);
         }
+
     }
 
     private boolean checkForHighScore() {
         return localScoresList.stream().anyMatch(score -> game.getScore() > score.getValue());
+    }
+
+    private boolean checkForOnlineHighScore() {
+        return remoteScoresList.stream().anyMatch(score -> game.getScore() > score.getValue());
+
     }
 
     public void promptForName() {
@@ -232,16 +292,55 @@ public class ScoresScene extends BaseScene {
         // Clears any input fields and existing children from centerBox
         centerBox.getChildren().clear();
 
+        // Create a new ScoresList for online scores
+        ScoresList onlineScoresList = new ScoresList();
+        onlineScoresList.bindScores(remoteScoresList);
+
         // If no new high score, just show the existing scores
+        // Create a title label for local scores
+        Label localScoresTitle = new Label("Local LeaderBoard");
+        localScoresTitle.getStyleClass().add("headingLeaderBoard");
+
+        // Create a title label for online scores
+        Label onlineScoresTitle = new Label("Online LeaderBoard");
+        onlineScoresTitle.getStyleClass().add("headingLeaderBoard");
+
+        // Create VBox containers for local and online scores
+        VBox localScoresBox = new VBox(localScoresTitle, scoresList);
+        localScoresBox.getStyleClass().add("leaderBoardBox");
+        localScoresBox.setPadding(new Insets(10));
+        localScoresBox.setAlignment(Pos.CENTER);
+
+        VBox onlineScoresBox = new VBox(onlineScoresTitle, onlineScoresList);
+        onlineScoresBox.getStyleClass().add("leaderBoardBox");
+
+        onlineScoresBox.setPadding(new Insets(10));
+        onlineScoresBox.setAlignment(Pos.CENTER);
+
+        // Add both score lists to the leaderBoardsBox
+        leaderBoardsBox.getChildren()
+            .clear(); // Clear it first to make sure we don't duplicate components
+        leaderBoardsBox.getChildren().addAll(localScoresBox, onlineScoresBox);
+        leaderBoardsBox.setSpacing(20);
+        // Add the leaderBoardsBox to the centerBox
+        centerBox.getChildren().add(leaderBoardsBox);
+        centerBox.setPadding(new Insets(0,0,0,50));
+        // Start playing end music
         Multimedia.stopMusic();
         Multimedia.playMusic("end.wav");
-        titleBox.getChildren().add(leaderBoard);
-        leaderBoard.getStyleClass().add("headingLeaderBoard");
-        centerBox.getChildren().add(scoresList);
+
         scoresList.revealScores();
+        Platform.runLater(onlineScoresList::revealScores);
+
     }
 
     private void saveHighScore(String playerName, int score) {
+
+        if (checkForOnlineHighScore()) {
+            writeOnlineScore(playerName, score);
+            loadOnlineScores();
+        }
+
         // Insert the new high score into the localScoresList
         localScoresList.add(new Pair<>(playerName, score));
         localScoresList.sort((p1, p2) -> p2.getValue().compareTo(p1.getValue()));
@@ -252,7 +351,6 @@ public class ScoresScene extends BaseScene {
         }
         // Saves scores to file
         writeScores(new ArrayList<>(localScoresList));
-
         displayLeaderboard();
     }
 

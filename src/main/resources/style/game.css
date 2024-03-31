@@ -354,9 +354,15 @@ TextField {
 }
 
 .headingLeaderBoard {
-    -fx-font-size: 40px;
-    -fx-text-fill: white; /* Golden color */
+    -fx-font-size: 36px;
+    -fx-text-fill: white;
     -fx-effect: dropshadow(gaussian, rgba(255,215,0,0.8), 15, 0, 0, 0);
+
+}
+.leaderBoardBox {
+    -fx-text-fill: white;
+    -fx-border-color: white;
+    -fx-text-alignment: center;
 }
 
 .score-item {

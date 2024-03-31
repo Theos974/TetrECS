@@ -87,7 +87,7 @@ public class ScoresList extends VBox {
             ft.setToValue(1);
             ft.setDelay(Duration.millis(delay));
             ft.play();
-            delay += 100; // Increments delay for each score to create a cascade effect
+            delay += 150; // Increments delay for each score to create a cascade effect
         }
     }
 
