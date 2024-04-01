@@ -140,6 +140,11 @@ public class GameWindow {
         InstructionsScene instructionsScene = new InstructionsScene(this);
         loadScene(instructionsScene);
     }
+    public void startLobbyScene(){
+        LobbyScene lobbyScene = new LobbyScene(this);
+        loadScene(lobbyScene);
+
+    }
 
     public void startScoreScene(Game game) {
 

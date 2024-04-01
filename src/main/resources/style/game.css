@@ -167,7 +167,6 @@
     -fx-font-family: 'Orbitron';
     -fx-font-size: 16px;
     -fx-font-weight: 700;
-    -fx-border-color: black;
     -fx-stroke: black;
 }
 .channelItem.selected {
@@ -376,6 +375,32 @@ TextField {
     -fx-text-fill: #ffa07a; /* Light Salmon color */
     -fx-effect: dropshadow(gaussian, rgba(255,160,122,0.8), 15, 0.5, 0, 1);
 }
+.list-view {
+    -fx-background-color: transparent;
+}
+
+.chat-scroll-pane {
+    -fx-background: transparent;
+    -fx-background-color: transparent;
+}
+.messages-flow {
+    -fx-border-color: white;
+    -fx-border-insets: 5;
+    -fx-border-width: 2;
+    -fx-border-style: solid;
+    -fx-padding: 15px;
+}
+.clear-list-view {
+    -fx-background-insets: 0;
+    -fx-background-color: transparent;
+    /* Add other styling properties as needed */
+}
+.clear-list-view .list-cell:filled:selected, .clear-list-view .list-cell:filled:hover {
+    -fx-background-color: -fx-selection-bar-non-focused;
+}
+
+
+
 
 
 

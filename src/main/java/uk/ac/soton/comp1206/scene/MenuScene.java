@@ -124,7 +124,14 @@ public class MenuScene extends BaseScene {
             Multimedia.playAudio("transition.wav");
             gameWindow.startInstructions();
         });
+
+        multiplayerButton.setOnAction(event -> {
+            Multimedia.playAudio("transition.wav");
+            gameWindow.startLobbyScene();
+        });
+
     }
+
 
 
 

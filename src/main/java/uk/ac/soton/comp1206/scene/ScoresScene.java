@@ -196,19 +196,6 @@ public class ScoresScene extends BaseScene {
 
         });
     }
-/*
-    // This is a mock method for testing purposes.
-    public void testSubmitHighScore() {
-        String testPlayerName = "Prokopis";
-        int testScore = 22000; // A score that's guaranteed to be a high score for testing.
-
-        // Call the method that handles high score submission
-        writeOnlineScore(testPlayerName, testScore);
-        loadOnlineScores();
-        // Here you can put any additional logic you need to verify the submission.
-        logger.info("Test high score submitted: " + testPlayerName + " - " + testScore);
-    }
-*/
 
     public void writeScores(List<Pair<String, Integer>> playerScores) {
         File f = new File("localScores.txt");
