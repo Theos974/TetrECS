@@ -47,11 +47,11 @@ public class Game {
     protected GamePiece currentPiece;
     protected GamePiece followingPiece;
     private static final int POINTS_PER_LEVEL = 1000;
-    private NextPieceListener nextPieceListener;
+    protected NextPieceListener nextPieceListener;
     private FollowingPieceListener followingPieceListener;
     private LineClearedListener lineClearedListener = null;
-    private GameLoopListener gameLoopListener;
-    private GameOverListener gameOverListener;
+    protected GameLoopListener gameLoopListener;
+    protected GameOverListener gameOverListener;
 
     private boolean swoosh = false;
     GameWindow gameWindow;
@@ -111,7 +111,7 @@ public class Game {
 
     private ScheduledExecutorService executorService =
         Executors.newSingleThreadScheduledExecutor();
-    private Runnable gameLoop;
+    protected Runnable gameLoop;
 
 
     /**
@@ -170,6 +170,7 @@ public class Game {
             nextPiece(); //gets the next piece
             return true;
         } else {
+            Multimedia.playAudio("fail.wav");
             logger.info("Piece cannot be played at the specified at " + x + ", " + y);
             return false;
         }
@@ -210,6 +211,8 @@ public class Game {
      * new piece is returned @return
      */
     public GamePiece spawnPiece() {
+        logger.info("single player");
+
         Random random = new Random();
         return GamePiece.createPiece(random.nextInt(15));
     }
@@ -402,7 +405,7 @@ public class Game {
      *
      * @param listener
      */
-    public void setOnNextPieceListener(NextPieceListener listener) {
+    public  void setOnNextPieceListener(NextPieceListener listener) {
         this.nextPieceListener = listener;
     }
 
@@ -412,7 +415,7 @@ public class Game {
      *
      * @param piece
      */
-    private void triggerNextPieceListener(GamePiece piece) {
+    protected void triggerNextPieceListener(GamePiece piece) {
         if (nextPieceListener != null) {
             nextPieceListener.nextPiece(piece);
         }
@@ -423,7 +426,7 @@ public class Game {
      *
      * @param piece
      */
-    private void triggerFollowingPieceListener(GamePiece piece) {
+    protected void triggerFollowingPieceListener(GamePiece piece) {
         if (followingPieceListener != null) {
             followingPieceListener.nextPiece(piece);
         }
@@ -476,7 +479,7 @@ public class Game {
      *
      * @param delay
      */
-    private void scheduleNextLoop(int delay) {
+    protected void scheduleNextLoop(int delay) {
         executorService.schedule(gameLoop, delay, TimeUnit.MILLISECONDS);
     }
 
@@ -488,7 +491,7 @@ public class Game {
         // Lose a life, discard the current piece, reset multiplier, check if game should end
         setLives(getLives() - 1);
         Multimedia.playAudio("lifelose.wav");
-        if (getLives() == 0) {
+        if (getLives() < 0) {
             logger.info("inside gameLoop 0 lives");
             endGame();
         } else {
@@ -525,6 +528,13 @@ public class Game {
             scheduleNextLoop(getTimerDelay()); // Reschedule the loop with the current delay
         } else {
             logger.info("Executor service is null or already shut down.");
+        }
+    }
+
+    public void stopGameLoop() {
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdownNow(); // Stop all tasks and interrupt the running tasks
+            logger.info("Game loop stopped");
         }
     }
 

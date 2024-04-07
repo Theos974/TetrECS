@@ -28,6 +28,7 @@ import javafx.util.Pair;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.ScoresList;
 import uk.ac.soton.comp1206.game.Game;
+import uk.ac.soton.comp1206.game.MultiplayerGame;
 import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
@@ -41,13 +42,12 @@ public class ScoresScene extends BaseScene {
     VBox centerBox = new VBox();
     HBox leaderBoardsBox = new HBox();
     VBox titleBox;
-    private final Label leaderBoard = new Label("LeaderBoard");
 
     private ListProperty<Pair<String, Integer>> localScoresList;
     private ListProperty<Pair<String, Integer>> remoteScoresList =
         new SimpleListProperty<>(FXCollections.observableArrayList());
     private Communicator communicator;
-
+    private MultiplayerGame multiplayerGame;
 
     public ScoresScene(GameWindow gameWindow, Game game) {
         super(gameWindow);
@@ -57,7 +57,9 @@ public class ScoresScene extends BaseScene {
         scoresList.bindScores(localScoresList);
         communicator = gameWindow.getCommunicator();
         loadScores();
-
+        if (game instanceof MultiplayerGame) {
+            this.multiplayerGame = (MultiplayerGame) game;
+        }
     }
 
     @Override
@@ -68,7 +70,7 @@ public class ScoresScene extends BaseScene {
         var scorePane = new StackPane();
         scorePane.setMaxWidth(gameWindow.getWidth());
         scorePane.setMaxHeight(gameWindow.getHeight());
-        scorePane.getStyleClass().add("menu-background3");
+        scorePane.getStyleClass().add(SettingsScene.menuTheme.getText());
         root.getChildren().add(scorePane);
 
         var mainPane = new BorderPane();
@@ -110,9 +112,11 @@ public class ScoresScene extends BaseScene {
             Multimedia.playAudio("transition.wav");
             gameWindow.startMenu();
         });
-
-        bottomBar.getChildren().addAll(retryText, backText);
-
+        if (multiplayerGame == null) {
+            bottomBar.getChildren().addAll(retryText, backText);
+        } else {
+            bottomBar.getChildren().add(backText);
+        }
     }
 
     @Override
@@ -176,9 +180,9 @@ public class ScoresScene extends BaseScene {
     }
 
     public void handleCommunication(String message) {
-
+        String[] scores = message.split(" ");
         Platform.runLater(() -> {
-            String[] lines = message.split("\n");
+            String[] lines = scores[1].split("\n");
             remoteScoresList.clear(); // Clear previous scores
             for (String line : lines) {
                 String[] parts = line.split(":");
@@ -231,7 +235,7 @@ public class ScoresScene extends BaseScene {
         // If there is a high score, prompt for the name.
         if (checkForHighScore()) {
             // Show prompt for name entry
-            var highScoreLabel = new Label("New High Score Achieved!");
+            var highScoreLabel = new Label("New Personal High Score Achieved!");
             highScoreLabel.getStyleClass().add("headingLeaderBoard");
             var enterName = new TextField();
             enterName.getStyleClass().add("TextField");
@@ -288,6 +292,18 @@ public class ScoresScene extends BaseScene {
         Label localScoresTitle = new Label("Local LeaderBoard");
         localScoresTitle.getStyleClass().add("headingLeaderBoard");
 
+        Label multiplayerScoresTitle = new Label("Multiplayer Game");
+        multiplayerScoresTitle.getStyleClass().add("headingLeaderBoard");
+
+        // Create a ScoresList for multiplayer scores
+        ScoresList multiplayerScoresListUI = new ScoresList();
+
+        // Check if the game instance is MultiplayerGame and bind the scores
+        if (multiplayerGame != null) {
+            multiplayerScoresListUI.bindScores(
+                ((MultiplayerGame) game).getScores()); // Use your actual method to get multiplayer scores
+        }
+
         // Create a title label for online scores
         Label onlineScoresTitle = new Label("Online LeaderBoard");
         onlineScoresTitle.getStyleClass().add("headingLeaderBoard");
@@ -300,24 +316,45 @@ public class ScoresScene extends BaseScene {
 
         VBox onlineScoresBox = new VBox(onlineScoresTitle, onlineScoresList);
         onlineScoresBox.getStyleClass().add("leaderBoardBox");
-
         onlineScoresBox.setPadding(new Insets(10));
         onlineScoresBox.setAlignment(Pos.CENTER);
+
+        //Vbox for multiplayer
+        VBox multiplayerScoresBox = new VBox(multiplayerScoresTitle, multiplayerScoresListUI);
+        multiplayerScoresBox.getStyleClass().add("leaderBoardBox");
+        multiplayerScoresBox.setPadding(new Insets(10));
+        multiplayerScoresBox.setAlignment(Pos.CENTER);
 
         // Add both score lists to the leaderBoardsBox
         leaderBoardsBox.getChildren()
             .clear(); // Clear it first to make sure we don't duplicate components
-        leaderBoardsBox.getChildren().addAll(localScoresBox, onlineScoresBox);
+
+
         leaderBoardsBox.setSpacing(20);
         // Add the leaderBoardsBox to the centerBox
         centerBox.getChildren().add(leaderBoardsBox);
-        centerBox.setPadding(new Insets(0,0,0,50));
+        centerBox.setPadding(new Insets(0, 0, 0, 50));
+
+
+        if (multiplayerGame != null) {
+
+            // For multiplayer game, only show the multiplayer leaderboard
+            leaderBoardsBox.getChildren().addAll(multiplayerScoresBox, onlineScoresBox);
+
+            multiplayerScoresListUI.revealScores();
+            Platform.runLater(onlineScoresList::revealScores);
+
+        } else {
+            leaderBoardsBox.getChildren().addAll(localScoresBox, onlineScoresBox);
+
+            scoresList.revealScores();
+            Platform.runLater(onlineScoresList::revealScores);
+        }
+
         // Start playing end music
         Multimedia.stopMusic();
         Multimedia.playMusic("end.wav");
 
-        scoresList.revealScores();
-        Platform.runLater(onlineScoresList::revealScores);
 
     }
 

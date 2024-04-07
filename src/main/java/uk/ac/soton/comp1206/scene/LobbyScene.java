@@ -42,7 +42,7 @@ import org.apache.logging.log4j.Logger;
 public class LobbyScene extends BaseScene {
 
     private static final Logger logger = LogManager.getLogger(LobbyScene.class);
-    private Communicator communicator;
+    protected static Communicator communicator;
     private ObservableList<String> userList = FXCollections.observableArrayList();
     private ListProperty<String> channelList;
     private Timeline channelRequestTimer;
@@ -71,7 +71,7 @@ public class LobbyScene extends BaseScene {
      */
     public LobbyScene(GameWindow gameWindow) {
         super(gameWindow);
-        this.communicator = gameWindow.getCommunicator();
+        communicator = gameWindow.getCommunicator();
         this.channelList = new SimpleListProperty<>(FXCollections.observableArrayList());
         channelListView.itemsProperty().bind(channelList);
         startChannelRequestTimer();
@@ -165,7 +165,7 @@ public class LobbyScene extends BaseScene {
         startGameButton.setOnAction(event -> {
 
             if (host == true) {
-                communicator.send("START");
+               handleStart();
             } else {
                 logger.info("you are not host");
             }
@@ -197,11 +197,17 @@ public class LobbyScene extends BaseScene {
 
 
     }
+    private void handleStart(){
+        communicator.send("START");
+        gameWindow.startMultiplayerScene();
+        stopChannelRequestTimer();
+        logger.info("stopped channel request loop");
+    }
 
     private void handleEscapePressed() {
         Multimedia.playAudio("transition.wav");
         stopChannelRequestTimer();
-       // communicator.send("QUIT");
+        communicator.send("PART");
         gameWindow.startMenu();
         logger.info("Pressed escape to go back");
     }
@@ -212,6 +218,10 @@ public class LobbyScene extends BaseScene {
         String content = messageParts.length > 1 ? messageParts[1] : ""; // Content might be empty
 
         switch (command) {
+            case "START":
+                stopChannelRequestTimer();
+                Platform.runLater(gameWindow::startMultiplayerScene);
+                break;
             case "CHANNELS":
                 String[] channels = content.split("\n");
                 updateChannelList(channels);
@@ -227,9 +237,6 @@ public class LobbyScene extends BaseScene {
                 break;
             case "HOST":
                 handleHost(); // Now it will correctly handle "HOST" without additional content
-                break;
-            case "QUIT":
-                handleQuit();
                 break;
             case "MSG":
                 handleChatMessage(content);
@@ -292,7 +299,7 @@ public class LobbyScene extends BaseScene {
                     communicator.send("NICK " + newNick);
                     messageToSend.clear();
                 } else {
-                    sendChatMessage(text, channel);
+                    sendChatMessage(text);
                 }
             }
         });
@@ -300,7 +307,7 @@ public class LobbyScene extends BaseScene {
 
     }
 
-    private void sendChatMessage(String message, String channel) {
+    private void sendChatMessage(String message) {
         communicator.send("MSG " + message);
 
         // Clear the input field ready for a new message
@@ -399,7 +406,7 @@ public class LobbyScene extends BaseScene {
         var menuPane = new StackPane();
         menuPane.setMaxWidth(gameWindow.getWidth());
         menuPane.setMaxHeight(gameWindow.getHeight());
-        menuPane.getStyleClass().add("menu-background3");
+        menuPane.getStyleClass().add(SettingsScene.menuTheme.getText());
         root.getChildren().add(menuPane);
 
         mainPane = new BorderPane();

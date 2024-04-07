@@ -5,6 +5,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.RotateTransition;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -31,6 +32,8 @@ public class MenuScene extends BaseScene {
     private Button start;
     private Button instructionsButton;
     private Button multiplayerButton;
+    private Button exit;
+    private Button settings;
 
     /**
      * Create a new menu scene
@@ -39,8 +42,7 @@ public class MenuScene extends BaseScene {
      */
     public MenuScene(GameWindow gameWindow) {
         super(gameWindow);
-
-
+        SettingsScene.loadSettings();
         logger.info("Creating Menu Scene");
     }
 
@@ -56,7 +58,7 @@ public class MenuScene extends BaseScene {
         var menuPane = new StackPane();
         menuPane.setMaxWidth(gameWindow.getWidth());
         menuPane.setMaxHeight(gameWindow.getHeight());
-        menuPane.getStyleClass().add("menu-background2");
+        menuPane.getStyleClass().add(SettingsScene.menuTheme.getText());
         root.getChildren().add(menuPane);
 
         var mainPane = new BorderPane();
@@ -99,11 +101,17 @@ public class MenuScene extends BaseScene {
         multiplayerButton = new Button("Multiplayer");
         multiplayerButton.getStyleClass().add("button-glow");
 
+        exit = new Button("Exit");
+        exit.getStyleClass().add("button-glow");
+
+        settings = new Button("Settings");
+        settings.getStyleClass().add("button-glow");
+
 
         VBox buttonBox = new VBox(10);
         buttonBox.setAlignment(Pos.CENTER);
         //centering the buttons
-        buttonBox.getChildren().addAll(start,multiplayerButton, instructionsButton);
+        buttonBox.getChildren().addAll(start,multiplayerButton, instructionsButton,settings,exit);
         mainPane.setCenter(buttonBox);
 
     }
@@ -114,6 +122,7 @@ public class MenuScene extends BaseScene {
      */
     @Override
     public void initialise() {
+
         start.setOnAction(event -> {
             Multimedia.playAudio("transition.wav");
             gameWindow.startChallenge();
@@ -130,9 +139,20 @@ public class MenuScene extends BaseScene {
             gameWindow.startLobbyScene();
         });
 
+        exit.setOnAction(event -> {
+            // Exit the application
+            Platform.exit();
+
+        });
+        settings.setOnAction(event -> {
+            Multimedia.playAudio("transition.wav");
+            gameWindow.startSettingsScene();
+        });
+
+    }
     }
 
 
 
 
-}
+

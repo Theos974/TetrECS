@@ -82,12 +82,12 @@ public class ScoresList extends VBox {
         logger.info("Revealing scores");
         int delay = 0;
         for (Node child : this.getChildren()) {
-            FadeTransition ft = new FadeTransition(Duration.seconds(0.5), child);
+            FadeTransition ft = new FadeTransition(Duration.seconds(1.5), child);
             ft.setFromValue(0);
             ft.setToValue(1);
             ft.setDelay(Duration.millis(delay));
             ft.play();
-            delay += 150; // Increments delay for each score to create a cascade effect
+            delay += 300; // Increments delay for each score to create a cascade effect
         }
     }
 

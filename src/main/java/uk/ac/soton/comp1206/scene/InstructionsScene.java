@@ -18,6 +18,7 @@ import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.game.GamePiece;
+import uk.ac.soton.comp1206.game.Grid;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 import org.apache.logging.log4j.LogManager;
@@ -40,7 +41,7 @@ public class InstructionsScene extends BaseScene {
         var instructionsPane = new StackPane();
         instructionsPane.setMaxWidth(gameWindow.getWidth());
         instructionsPane.setMaxHeight(gameWindow.getHeight());
-        instructionsPane.getStyleClass().add("menu-background3");
+        instructionsPane.getStyleClass().add(SettingsScene.menuTheme.getText());
 
 
         var mainPane = new BorderPane();
@@ -89,7 +90,7 @@ public class InstructionsScene extends BaseScene {
             for (int y = 0; y < 5; y++) {
                 GamePiece piece = GamePiece.createPiece(i * 5 + y);
                 PieceBoard pieceBoard =
-                    new PieceBoard(new Game(3, 3), 50, 40);
+                    new PieceBoard(new Grid(3, 3), 50, 40);
                 pieceBoard.setPiece(piece);
                 pieceRow.getChildren().add(pieceBoard);
             }

@@ -9,8 +9,8 @@ import org.apache.logging.log4j.Logger;
 public class PieceBoard extends GameBoard {
 
 
-    public PieceBoard(Game grid, double width, double height) {
-        super(grid.getGrid(), width, height);
+    public PieceBoard(Grid grid, double width, double height) {
+        super(grid, width, height);
 
     }
 

@@ -11,11 +11,23 @@
     -fx-background-size: cover;
 }
 .menu-background2 {
-    -fx-background-image: url("../images/6.jpg");
+    -fx-background-image: url("../images/2.jpg");
     -fx-background-size: cover;
 }
 .menu-background3 {
     -fx-background-image: url("../images/3.jpg");
+    -fx-background-size: cover;
+}
+.menu-background4 {
+    -fx-background-image: url("../images/4.jpg");
+    -fx-background-size: cover;
+}
+.menu-background5 {
+    -fx-background-image: url("../images/5.jpg");
+    -fx-background-size: cover;
+}
+.menu-background6 {
+    -fx-background-image: url("../images/6.jpg");
     -fx-background-size: cover;
 }
 
@@ -271,6 +283,7 @@ TextField {
 .button-glow:pressed {
     -fx-effect: dropshadow(gaussian, rgba(0,255,255,0.8), 5, 0.5, 0, 0);
 }
+
 
 
 .button-glow-red {

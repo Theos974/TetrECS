@@ -9,11 +9,13 @@ import javafx.animation.FillTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
+import javafx.scene.control.TextField;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -27,6 +29,7 @@ import uk.ac.soton.comp1206.component.GameBlockCoordinate;
 import uk.ac.soton.comp1206.component.GameBoard;
 import uk.ac.soton.comp1206.component.PieceBoard;
 import uk.ac.soton.comp1206.game.Game;
+import uk.ac.soton.comp1206.game.Grid;
 import uk.ac.soton.comp1206.ui.GamePane;
 import uk.ac.soton.comp1206.ui.GameWindow;
 
@@ -35,20 +38,24 @@ import uk.ac.soton.comp1206.ui.GameWindow;
  */
 public class ChallengeScene extends BaseScene {
 
-    private GameBoard board;
+    protected GameBoard board;
 
-    private PieceBoard nextPieceBoard;
-    private PieceBoard followingPieceBoard;
-    private Rectangle timerBar;
+    protected PieceBoard nextPieceBoard;
+    protected PieceBoard followingPieceBoard;
+    protected Rectangle timerBar;
     private Timeline timeline;
-
-
+    protected VBox bottomBox;
+    protected TextField chatField;
+    protected BorderPane mainPane;
+    protected VBox centerBox;
+    protected VBox leftSection;
+    protected Text title;
     private final IntegerProperty highScore = new SimpleIntegerProperty();
 
     private static final Logger logger = LogManager.getLogger(ChallengeScene.class);
     protected Game game;
 
-    private int x, y = 0;
+    protected int x, y = 0;
 
     /**
      * Create a new Single Player challenge scene
@@ -58,9 +65,13 @@ public class ChallengeScene extends BaseScene {
     public ChallengeScene(GameWindow gameWindow) {
         super(gameWindow);
         logger.info("Creating Challenge Scene");
-        Multimedia.playMusic("game.wav");
-        this.nextPieceBoard = new PieceBoard(new Game(3, 3), 110, 100);
-        this.followingPieceBoard = new PieceBoard(new Game(3, 3), 75, 75);
+        this.nextPieceBoard = new PieceBoard(new Grid(3, 3), 110, 100);
+        this.followingPieceBoard = new PieceBoard(new Grid(3, 3), 75, 75);
+    }
+
+    public void buildBoard() {
+        board =
+            new GameBoard(game.getGrid(), gameWindow.getWidth() / 2, gameWindow.getWidth() / 2);
     }
 
     /**
@@ -79,17 +90,21 @@ public class ChallengeScene extends BaseScene {
         var challengePane = new StackPane();
         challengePane.setMaxWidth(gameWindow.getWidth());
         challengePane.setMaxHeight(gameWindow.getHeight());
-        challengePane.getStyleClass().add("challenge-background");
+        challengePane.getStyleClass().add(SettingsScene.gameTheme.getText());
         root.getChildren().add(challengePane);
 
-        var mainPane = new BorderPane();
+        mainPane = new BorderPane();
         challengePane.getChildren().add(mainPane);
 
-        board =
-            new GameBoard(game.getGrid(), gameWindow.getWidth() / 2, gameWindow.getWidth() / 2);
-        board.getStyleClass().add("gameBox");
 
-        mainPane.setCenter(board);
+        //Center Section
+        centerBox = new VBox();
+        buildBoard();
+        board.getStyleClass().add("gameBox");
+        centerBox.getChildren().add(board);
+        centerBox.setPadding(new Insets(0,0,0,40));
+        centerBox.setAlignment(Pos.CENTER);
+        mainPane.setCenter(centerBox);
 
         //Statistics
 
@@ -147,10 +162,10 @@ public class ChallengeScene extends BaseScene {
         Text highScoreNum = new Text();
         highScoreNum.textProperty().bind(highScore.asString());
         highScoreNum.getStyleClass().add("hi-score");
-
+        hiBox.getChildren().addAll(hiScoreText, highScoreNum);
 
         //Title
-        var title = new Text("Challenge Mode");
+        title = new Text("Challenge Mode");
         title.getStyleClass().add("button-glow");
         var incomingText = new Text("Incoming");
         incomingText.getStyleClass().add("glow-red");
@@ -164,11 +179,8 @@ public class ChallengeScene extends BaseScene {
 
         //Left section
 
-        var leftSection = new VBox(5);
-        leftSection.setPadding(new Insets(0, 0, 0, 20));
-        leftSection.setAlignment(Pos.CENTER);
-        //leftSection.getChildren().add()
-        mainPane.setLeft(leftSection);
+        leftSection = new VBox();
+
 
         //Right section
         var rightSection = new VBox();
@@ -176,18 +188,27 @@ public class ChallengeScene extends BaseScene {
         rightSection.setSpacing(20);
         rightSection.setAlignment(Pos.CENTER);
         rightSection.getChildren()
-            .addAll(hiScoreText, highScoreNum, levelBox, multiplierBox, incomingText,
+            .addAll(hiBox, levelBox, multiplierBox, incomingText,
                 nextPieceBoard, followingPieceBoard);
         mainPane.setRight(rightSection);
 
+        hiBox.setId("hiBox");
+        levelBox.setId("levelBox");
+        multiplierBox.setId("multiplierBox");
+
         //Bottom
+        bottomBox = new VBox();
+
         var timerBox = new HBox();
         timerBar = new Rectangle(0, 0, gameWindow.getWidth(), 15); // Assuming a height of 15 pixels
-        timerBar.prefHeight(10); 
+        timerBar.prefHeight(10);
         timerBar.getStyleClass().add("timer-bar");
 
+
         timerBox.getChildren().add(timerBar);
-        mainPane.setBottom(timerBox);
+        bottomBox.getChildren().add(timerBox);
+        mainPane.setBottom(bottomBox);
+
 
         BorderPane.setMargin(board, new Insets(0, 0, 0, 30));
 
@@ -229,7 +250,7 @@ public class ChallengeScene extends BaseScene {
     /**
      * Method sets up the keyboard bindings
      */
-    private void setKeyboard() {
+    protected void setKeyboard() {
         //manages keyboard bindings
         scene.setOnKeyPressed(event -> {
             switch (event.getCode()) {
@@ -252,7 +273,9 @@ public class ChallengeScene extends BaseScene {
                     logger.info("escaped pressed");
                     Multimedia.stopMusic();
                     Multimedia.playAudio("transition.wav");
+                    game.stopGameLoop();
                     gameWindow.startMenu();
+
                     break;
                 case W:
                 case UP:
@@ -292,8 +315,7 @@ public class ChallengeScene extends BaseScene {
                     dropPiece();
                     logger.info("key pressed to drop piece");
                     break;
-                case G:
-                    gameWindow.startScoreScene(game);
+
             }
         });
 
@@ -302,7 +324,7 @@ public class ChallengeScene extends BaseScene {
     /**
      * Method handles: event clicking (on all grids)
      */
-    private void handleClick() {
+    protected void handleClick() {
         //Handle block on gameboard grid being clicked
         board.setOnBlockClick(this::blockClicked);
 
@@ -329,7 +351,7 @@ public class ChallengeScene extends BaseScene {
      *
      * @param blocks
      */
-    private void fade(HashSet<GameBlockCoordinate> blocks) {
+    protected void fade(HashSet<GameBlockCoordinate> blocks) {
         board.fadeOut(blocks);
         logger.info("fade activated");
     }
@@ -337,16 +359,16 @@ public class ChallengeScene extends BaseScene {
     /**
      * sets and updates the pieces of the boards with listeners
      */
-    private void setPieces() {
+    protected void setPieces() {
         game.setOnNextPieceListener(piece -> {
             // Update the PieceBoard with the new piece
-            nextPieceBoard.setPiece(piece);
+            Platform.runLater(() -> nextPieceBoard.setPiece(piece));
             logger.info("currentListener updates current piece board");
         });
 
         game.setOnFollowingPieceListener(piece -> {
             // Update the FollowingPieceBoard with the new following piece
-            followingPieceBoard.setPiece(piece);
+            Platform.runLater(() -> followingPieceBoard.setPiece(piece));
             logger.info("followingListener updates following piece board");
         });
     }
@@ -354,7 +376,7 @@ public class ChallengeScene extends BaseScene {
     /**
      * method drops the piece on the corresponding block in the board
      */
-    private void dropPiece() {
+    protected void dropPiece() {
 
         boolean success = game.blockClicked(board.getBlock(x, y));
         if (success) {
@@ -387,7 +409,7 @@ public class ChallengeScene extends BaseScene {
         });
     }
 
-    private void updateTimerBar() {
+    protected void updateTimerBar() {
         double fullBarWidth = gameWindow.getWidth();
         double timeInterval = game.getTimerDelay();
 
@@ -410,7 +432,8 @@ public class ChallengeScene extends BaseScene {
         );
 
         // Flashing effect when the time is almost up
-        FillTransition fillTransition = new FillTransition(Duration.millis(300), timerBar, Color.RED, Color.ORANGE);
+        FillTransition fillTransition =
+            new FillTransition(Duration.millis(300), timerBar, Color.RED, Color.ORANGE);
         fillTransition.setCycleCount(Animation.INDEFINITE);
         fillTransition.setAutoReverse(true);
 
@@ -419,16 +442,15 @@ public class ChallengeScene extends BaseScene {
     }
 
 
-
-    private void resetTimerBar() {
+    protected void resetTimerBar() {
         if (timeline != null) {
             timeline.stop(); // Stop the current timeline
         }
         updateTimerBar(); // Create and start a new animation
     }
 
-    private void gameOver() {
-        gameWindow.startScoreScene(game);
+    protected void gameOver() {
+       Platform.runLater(()-> gameWindow.startScoreScene(game));
     }
 
 
@@ -438,7 +460,7 @@ public class ChallengeScene extends BaseScene {
     @Override
     public void initialise() {
         logger.info("Initialising Challenge");
-
+        Multimedia.playMusic("game.wav");
         game.start();
         highScore.set(getHighScore());
         highScoreSetter();
