@@ -1,10 +1,7 @@
 package uk.ac.soton.comp1206.component;
 
-import java.util.Random;
 import javafx.animation.AnimationTimer;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.canvas.Canvas;
@@ -113,7 +110,7 @@ public class GameBlock extends Canvas {
     }
 
     /**
-     * Handle painting of the block canvas
+     * Method that handles painting of the block canvas
      */
 
     public void paint() {
@@ -131,7 +128,7 @@ public class GameBlock extends Canvas {
             }
         }
 
-        // If hover is true and you are not hovering over the displayed piece, then paint hover effect
+        // If hover is true, and you are not hovering over the displayed piece, then paint hover effect
         if (this.hovered && !isPartOfPieceBoard()) {
             paintHoverEffect();
         }
@@ -164,19 +161,24 @@ public class GameBlock extends Canvas {
     }
 
     /**
-     * when hovering over a block, "hovered" set as focus
+     * when hovering over a block, "hovered" set as true
+     * calls paint method to paint the state
      */
-    protected void setHovered(boolean focus) {
-        this.hovered = focus;
+    protected void setHovered() {
+        logger.info("set block to hovering");
+        this.hovered = true;
         paint();
     }
 
 
 
     /**
-     * //method for when the mouse exits the block
+     * Method for when the mouse exits the block
+     * sets the hovered flag to false
+     * calls paint method to reflect the change
      */
     public void removeHover() {
+        logger.info("removing hover");
         hovered = false;
         paint(); // repaint to reflect the change in hover state
     }
@@ -275,6 +277,7 @@ public class GameBlock extends Canvas {
 
     /**
      * sets centre true for centre indicator
+     * calls paint method to represent the change
      */
     public void isCenterBlock() {
         centre = true;
@@ -309,7 +312,7 @@ public class GameBlock extends Canvas {
     }
 
     /**
-     * Fades out the blocks cleared ( visual representation )
+     * Method: Fades out the blocks cleared ( visual representation )
      */
     public void fadeOut() {
         final long startNanoTime = System.nanoTime();

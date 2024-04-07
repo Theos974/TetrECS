@@ -1,7 +1,12 @@
 package uk.ac.soton.comp1206.event;
 
-import uk.ac.soton.comp1206.component.GameBlock;
 
+/**
+ * Listener used to handle the event when a block is right-clicked
+ */
 public interface RightClickListener {
-    public void rightClicked();
+    /**
+     * Used to indicate right click event
+     */
+     void rightClicked();
 }

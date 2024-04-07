@@ -1,22 +1,16 @@
 package uk.ac.soton.comp1206.scene;
 
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import uk.ac.soton.comp1206.Multimedia;
 import uk.ac.soton.comp1206.component.PieceBoard;
-import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.game.Grid;
 import uk.ac.soton.comp1206.ui.GamePane;
@@ -28,10 +22,17 @@ public class InstructionsScene extends BaseScene {
     private static final Logger logger = LogManager.getLogger(InstructionsScene.class);
 
 
+    /**
+     * Instruction Class used to display the instructions of the game
+     * @param gameWindow;
+     */
     public InstructionsScene(GameWindow gameWindow) {
         super(gameWindow);
     }
 
+    /**
+     * Method to build the scenes UI components
+      */
     @Override
     public void build() {
 
@@ -101,6 +102,9 @@ public class InstructionsScene extends BaseScene {
         instructionsPane.getChildren().add(mainPane);
     }
 
+    /**
+     * Initialises the Scenes controls
+     */
     @Override
     public void initialise() {
 

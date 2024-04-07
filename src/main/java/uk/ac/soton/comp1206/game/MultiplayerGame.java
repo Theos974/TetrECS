@@ -1,5 +1,7 @@
 package uk.ac.soton.comp1206.game;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javafx.application.Platform;
@@ -8,7 +10,6 @@ import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.util.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,16 +17,40 @@ import uk.ac.soton.comp1206.component.GameBlock;
 import uk.ac.soton.comp1206.network.Communicator;
 import uk.ac.soton.comp1206.scene.MultiplayerScene;
 
+/**
+ * MultiplayerGame class extends the Game class and handles the logic taking place in multiplayer mode.
+ * Overrides methods in Game class
+ * New methods to handle server communication and new UI components
+ */
 public class MultiplayerGame extends Game {
+    /**
+     * communicator to handles server messages
+     */
     Communicator communicator;
-    private ListProperty<Pair<String, Integer>> scores =
+    /**
+     * List used to track the score of the multiplayer Game
+     */
+    private final ListProperty<Pair<String, Integer>> scores =
         new SimpleListProperty<>(FXCollections.observableArrayList());
-    private ListProperty<Pair<String, Integer>> livesList =
+    /**
+     * List used to track Lives of each player
+      */
+    private final ListProperty<Pair<String, Integer>> livesList =
         new SimpleListProperty<>(FXCollections.observableArrayList());
     private static final Logger logger = LogManager.getLogger(MultiplayerGame.class);
-    private IntegerProperty nextPieceValues = new SimpleIntegerProperty();
+    /**
+     * Integer property used to handle the new pieces
+      */
+    private final IntegerProperty nextPieceValues = new SimpleIntegerProperty();
 
+    /**
+     * set used to key track of dead players
+     */
+    private final Set<String> notifiedDeadPlayers = new HashSet<>();
 
+    /**
+     * Instance of Multiplayer scene to add new components(messages/notifications)
+      */
     private MultiplayerScene multiplayerScene;
 
     /**
@@ -39,6 +64,10 @@ public class MultiplayerGame extends Game {
         this.communicator = communicator;
     }
 
+    /**
+     * Method used to handle the server communication
+     * @param message: recieved by the server
+     */
     public void handleCommunication(String message) {
         // Split the message to determine the command type
         String[] messageParts = message.split(" ", 2);
@@ -73,15 +102,25 @@ public class MultiplayerGame extends Game {
 
 
     //handling PIECES
+
+    /**
+     * overridden method from Game class
+     *  used to spawn new pieces by requesting them from the server
+      * @return : piece spawned
+     */
     @Override
     public GamePiece spawnPiece() {
-        logger.info("multiplayer player");
+        logger.info("multiplayer spawn Piece");
 
         communicator.send("PIECE");
         return handlePieces();
     }
 
 
+    /**
+     * Method used to create the newPieces using the IntegerProperty to keep track of the series
+     * @return : the new spawned piece
+     */
     public GamePiece handlePieces() {
 
 
@@ -89,17 +128,20 @@ public class MultiplayerGame extends Game {
 
         pieceNum.set(nextPieceValues.getValue());
 
-
+        logger.info("creating new piece based on server");
         return GamePiece.createPiece(pieceNum.get());
 
     }
 
-    /**
-     * manages each game loop
-     */
 
 
     //Handling Board
+
+    /**
+     * Overridden method used to handle when a block is clicked
+     * informs the server of the players board state
+     * @param  : block currently clicked
+     */
     @Override
     public boolean blockClicked(GameBlock gameBlock) {
         boolean success = super.blockClicked(gameBlock);
@@ -121,15 +163,23 @@ public class MultiplayerGame extends Game {
                 board.append(tmp).append(" ");
             }
         }
+        logger.info("board to string");
         return board.toString().trim();
     }
 
 
     //Handling Scores
 
+    /**
+     * Method used to handle the player's scores
+      * @param playerName: name of the player
+     * @param newScore: the current score of the player
+     * The scores of each player are recieved from the server
+     */
     private void updatePlayerScore(String playerName, int newScore) {
 
         // Check if the player already has a score in the list
+
         Platform.runLater(() -> {
             boolean found = false;
             for (int i = 0; i < scores.size(); i++) {
@@ -151,6 +201,10 @@ public class MultiplayerGame extends Game {
         });
     }
 
+    /**
+     * Method used to handle the SCORES msg from the server
+      * @param content: data of each player's state
+     */
     public void handleScoresMessage(String content) {
 
         String[] playerScores =
@@ -167,13 +221,19 @@ public class MultiplayerGame extends Game {
         }
     }
 
+    /**
+     * intermediate method used to  update players' score and update their state in the game
+     * @param playerName: current player checked
+     * @param newScore: their score
+     * @param livesOrDead: whether they are still in play
+     */
     private void updatePlayerScoreAndStatus(String playerName, int newScore, String livesOrDead) {
         // Update the scores list
         updatePlayerScore(playerName, newScore);
 
         // Check if the player is dead or update their lives
         if (livesOrDead.equals("DEAD")) {
-            updatePlayerLives(playerName, -1);
+            playerDied(playerName);
         } else {
             int lives = Integer.parseInt(livesOrDead);
             updatePlayerLives(playerName, lives);
@@ -181,26 +241,56 @@ public class MultiplayerGame extends Game {
     }
 
 
+    /**
+     * Method used to recieve the IntegerProperty of the scores
+     * used for binding to update the UI with new scores
+      * @return : integerProperty of scores
+     */
     public ListProperty<Pair<String, Integer>> getScores() {
         return scores;
     }
 
     //Handling Lives
+
+    /**
+     * Method used to add notifications to the UI
+     * updates the players with a players current state
+     * @param playerName: current player
+     * @param remainingLives: their remaining lives
+     */
     public void playerLostLife(String playerName, int remainingLives) {
         String notification = playerName + " lost a life. Lives Remaining: " + remainingLives;
         multiplayerScene.addChatMessage(notification);
 
     }
 
+    /**
+     * Method used to check off dead players and notify alive players
+     * @param playerName: dead players name
+     */
     public void playerDied(String playerName) {
-        String notification = playerName + " died.";
-        multiplayerScene.addChatMessage(notification);
+
+        if (!notifiedDeadPlayers.contains(playerName)) {
+            String notification = playerName + " died.";
+            multiplayerScene.addChatMessage(notification);
+            notifiedDeadPlayers.add(playerName); // Mark as notified
+        }
     }
 
+    /**
+     * Method used to set the current Multiplayer scene
+      * @param scene: Multiplayer
+     */
     public void setMultiplayerScene(MultiplayerScene scene) {
         this.multiplayerScene = scene;
     }
 
+    /**
+     * Method used to update all players lives
+     *
+      * @param playerName: current player
+     * @param newLives: player's life
+     */
     private void updatePlayerLives(String playerName, int newLives) {
         // Find or create the player's lives entry
         boolean found = false;
@@ -221,26 +311,18 @@ public class MultiplayerGame extends Game {
             }
         }
 
-        // Notify if a player died (lives reached 0)
-        if (newLives < 0) {
-            playerDied(playerName);
-        }
     }
 
 
-    // Method to retrieve the lives list, which can be used to bind to a UI component
-    public ObservableList<Pair<String, Integer>> getLivesList() {
-        return livesList;
-    }
-
-
+    /**
+     *Overridden method used to initialise the game
+      */
     @Override
     public void initialiseGame() {
         logger.info("Initialising game");
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0;i<3;i++) {
             communicator.send("PIECE");
         }
-
         currentPiece = spawnPiece();
         followingPiece = spawnPiece();
         startGameLoop();

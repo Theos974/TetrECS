@@ -58,7 +58,13 @@ public class GameBoard extends GridPane {
      * The listener to call when a specific block is clicked
      */
     private BlockClickedListener blockClickedListener;
+    /**
+     * listener for right clicking
+     */
     protected RightClickListener rightClickedListener;
+    /**
+     * represents block currently being hovered on
+      */
     private GameBlock hovering;
 
 
@@ -143,6 +149,7 @@ public class GameBoard extends GridPane {
         var blockHeight = height / rows;
 
         //Create a new GameBlock UI component
+
         GameBlock block = new GameBlock(this, x, y, blockWidth, blockHeight);
 
         //Add to the GridPane
@@ -154,12 +161,21 @@ public class GameBoard extends GridPane {
         //Link the GameBlock component to the corresponding value in the Grid
         block.bind(grid.getGridProperty(x, y));
 
-        //Add a mouse click handler to the block to trigger GameBoard blockClicked method
+
+        /**
+         * Add a mouse click handler to the block to trigger GameBoard blockClicked method
+          */
         block.setOnMouseClicked((e) -> blockClicked(e, block));
 
+        /**
+         * sets currently hovered block on mouse enter
+         */
         block.setOnMouseEntered((e) -> hover(block));
 
-        // Remove hover effect when cursor is not on grid
+
+        /**
+         *  Removes hover effect when cursor is not on grid
+          */
         block.setOnMouseExited((e) -> block.removeHover());
 
 
@@ -179,14 +195,14 @@ public class GameBoard extends GridPane {
 
     /**
      * handles  whether a block is hovered on or not
-     * @param gameBlock
+     * @param gameBlock:the current clock being hovered
      */
     public void hover(GameBlock gameBlock) {
-        if (hovering != null) {
+        if (hovering != null) { //removes previous hover
             hovering.removeHover();
         }
         hovering = gameBlock;
-        gameBlock.setHovered(true);
+        gameBlock.setHovered(); //sets new hovered block
     }
 
     /**
@@ -201,7 +217,7 @@ public class GameBoard extends GridPane {
     /**
      * sets listener to handle event when block is right-clicked
      *
-     * @param listener
+     * @param listener:right click listener
      */
     public void setOnRightClick(RightClickListener listener) {
         this.rightClickedListener = listener;

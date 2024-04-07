@@ -1,21 +1,16 @@
 package uk.ac.soton.comp1206.scene;
 
 import javafx.animation.Animation;
-import javafx.animation.FadeTransition;
 import javafx.animation.KeyFrame;
 import javafx.animation.RotateTransition;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.media.MediaPlayer;
-import javafx.scene.text.Text;
 import javafx.util.Duration;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -108,17 +103,17 @@ public class MenuScene extends BaseScene {
         settings.getStyleClass().add("button-glow");
 
 
-        VBox buttonBox = new VBox(10);
+        VBox buttonBox = new VBox();
         buttonBox.setAlignment(Pos.CENTER);
         //centering the buttons
         buttonBox.getChildren().addAll(start,multiplayerButton, instructionsButton,settings,exit);
         mainPane.setCenter(buttonBox);
+        buttonBox.setSpacing(0);
 
     }
 
     /**
-     * when start button is clicked the challenge scene is displayed and menu music stops
-     * when How to Play button is clicked instruction scene is displayed
+     * Initialises the menu Scenes controls
      */
     @Override
     public void initialise() {
@@ -132,21 +127,24 @@ public class MenuScene extends BaseScene {
         instructionsButton.setOnAction(event ->{
             Multimedia.playAudio("transition.wav");
             gameWindow.startInstructions();
+            logger.info("Instructions");
         });
 
         multiplayerButton.setOnAction(event -> {
             Multimedia.playAudio("transition.wav");
             gameWindow.startLobbyScene();
+            logger.info("multiplayer option");
         });
 
         exit.setOnAction(event -> {
             // Exit the application
             Platform.exit();
-
         });
+
         settings.setOnAction(event -> {
             Multimedia.playAudio("transition.wav");
             gameWindow.startSettingsScene();
+            logger.info("settings option");
         });
 
     }

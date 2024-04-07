@@ -1,14 +1,20 @@
 package uk.ac.soton.comp1206.component;
 
-import uk.ac.soton.comp1206.game.Game;
 import uk.ac.soton.comp1206.game.GamePiece;
 import uk.ac.soton.comp1206.game.Grid;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+/**
+ * PieceBoard class extending GameBoard to draw the next Pieces Boards
+ */
 public class PieceBoard extends GameBoard {
 
 
+    /**
+     * Constructor: takes from GameBoard
+      * @param grid: required to form grid
+     * @param width:sets width of grid
+     * @param height:sets height of grid
+     */
     public PieceBoard(Grid grid, double width, double height) {
         super(grid, width, height);
 
@@ -16,16 +22,15 @@ public class PieceBoard extends GameBoard {
 
 
     /**
-     * sets new piece on the new pieces boards
-     *
-     * @param piece
+     * sets new piece on the new piece boards
+     * @param piece: used to draw the correct piece on the grid
      */
     public void setPiece(GamePiece piece) {
 
         int[][] pieceBlocks = piece.getBlocks();
 
         clearPieceGrid();
-        logger.info("cleared previous block");
+
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
 
@@ -39,7 +44,8 @@ public class PieceBoard extends GameBoard {
     }
 
     /**
-     * clears the new pieces board
+     * clears the new piece board
+     * Makes all values of the grid 0
      */
     public void clearPieceGrid() {
 
@@ -51,7 +57,7 @@ public class PieceBoard extends GameBoard {
 
             }
         }
-
+        logger.info("cleared previous block");
     }
 
 

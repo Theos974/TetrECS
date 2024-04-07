@@ -15,7 +15,9 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -69,6 +71,9 @@ public class ChallengeScene extends BaseScene {
         this.followingPieceBoard = new PieceBoard(new Grid(3, 3), 75, 75);
     }
 
+    /**
+     * Method used to build the game Board
+     */
     public void buildBoard() {
         board =
             new GameBoard(game.getGrid(), gameWindow.getWidth() / 2, gameWindow.getWidth() / 2);
@@ -102,7 +107,7 @@ public class ChallengeScene extends BaseScene {
         buildBoard();
         board.getStyleClass().add("gameBox");
         centerBox.getChildren().add(board);
-        centerBox.setPadding(new Insets(0,0,0,40));
+        centerBox.setPadding(new Insets(0, 10, 0, 0));
         centerBox.setAlignment(Pos.CENTER);
         mainPane.setCenter(centerBox);
 
@@ -179,7 +184,42 @@ public class ChallengeScene extends BaseScene {
 
         //Left section
 
+        //lives mechanic
         leftSection = new VBox();
+        var lifeBox = new VBox();
+        var increaseLives = new Button("Add life");
+        increaseLives.getStyleClass().add("glow-red");
+        var costLifeText = new Text("Cost:200 Score");
+        costLifeText.getStyleClass().add("heading");
+        Platform.runLater(() -> increaseLives.setOnMouseClicked(event -> game.increaseLives()));
+        lifeBox.getChildren().addAll(increaseLives, costLifeText);
+        lifeBox.setAlignment(Pos.CENTER);
+
+        //Skip piece mechanic
+        var skipPieceBox = new VBox();
+        var skipButton = new Button("Skip Piece");
+        skipButton.getStyleClass().add("glow-red");
+        var skipText = new Text("Cost:50 Score");
+        skipText.getStyleClass().add("heading");
+        Platform.runLater(() -> skipButton.setOnMouseClicked(event -> game.skipPiece()));
+        skipPieceBox.getChildren().addAll(skipButton, skipText);
+        skipPieceBox.setAlignment(Pos.CENTER);
+
+        //Clear Board mechanic
+        var clearBox = new VBox();
+        var clearButton = new Button("Clear Grid");
+        clearButton.getStyleClass().add("glow-red");
+        var clearText = new Text("Cost:300 Score");
+        clearText.getStyleClass().add("heading");
+        Platform.runLater(() -> clearButton.setOnMouseClicked(event -> game.clearBoard()));
+        clearBox.getChildren().addAll(clearButton, clearText);
+        clearBox.setAlignment(Pos.CENTER);
+
+
+        leftSection.getChildren().addAll(lifeBox, skipPieceBox, clearBox);
+        leftSection.setSpacing(15);
+        leftSection.setPadding(new Insets(80, 0, 0, 10));
+        mainPane.setLeft(leftSection);
 
 
         //Right section
@@ -252,7 +292,7 @@ public class ChallengeScene extends BaseScene {
      */
     protected void setKeyboard() {
         //manages keyboard bindings
-        scene.setOnKeyPressed(event -> {
+        scene.addEventFilter(KeyEvent.KEY_PRESSED, event -> {
             switch (event.getCode()) {
                 case Q:
                 case Z:
@@ -349,7 +389,7 @@ public class ChallengeScene extends BaseScene {
     /**
      * method to fade out the blocks
      *
-     * @param blocks
+     * @param blocks: blocks to fade out
      */
     protected void fade(HashSet<GameBlockCoordinate> blocks) {
         board.fadeOut(blocks);
@@ -357,7 +397,7 @@ public class ChallengeScene extends BaseScene {
     }
 
     /**
-     * sets and updates the pieces of the boards with listeners
+     * Method sets and updates the pieces of the boards with listeners
      */
     protected void setPieces() {
         game.setOnNextPieceListener(piece -> {
@@ -374,7 +414,7 @@ public class ChallengeScene extends BaseScene {
     }
 
     /**
-     * method drops the piece on the corresponding block in the board
+     * Method drops the piece on the corresponding block in the board
      */
     protected void dropPiece() {
 
@@ -386,6 +426,11 @@ public class ChallengeScene extends BaseScene {
         logger.info("dropPiece method for keyBoard used");
     }
 
+    /**
+     * Method used to get players HighScore
+     *
+     * @return high score
+     */
     public int getHighScore() {
         try (BufferedReader reader = new BufferedReader(new FileReader("localScores.txt"))) {
             return reader.lines()
@@ -400,15 +445,21 @@ public class ChallengeScene extends BaseScene {
         }
     }
 
+    /**
+     * Method used to handle changing High Score UI component if surpassed
+     */
     public void highScoreSetter() {
         game.scoreProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue.intValue() > highScore.get()) {
                 highScore.set(newValue.intValue());
-
+                logger.info("new high Score UI set");
             }
         });
     }
 
+    /**
+     * Method used to update the timerBar with animation
+     */
     protected void updateTimerBar() {
         double fullBarWidth = gameWindow.getWidth();
         double timeInterval = game.getTimerDelay();
@@ -442,15 +493,23 @@ public class ChallengeScene extends BaseScene {
     }
 
 
+    /**
+     * Method used to reset timer bar
+      */
     protected void resetTimerBar() {
         if (timeline != null) {
             timeline.stop(); // Stop the current timeline
         }
         updateTimerBar(); // Create and start a new animation
+        logger.info("timer bar reset");
     }
 
+    /**
+     * method used to handle when the game is over
+     */
     protected void gameOver() {
-       Platform.runLater(()-> gameWindow.startScoreScene(game));
+        Platform.runLater(() -> gameWindow.startScoreScene(game));
+        logger.info("game over");
     }
 
 

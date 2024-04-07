@@ -43,17 +43,16 @@ public class LobbyScene extends BaseScene {
 
     private static final Logger logger = LogManager.getLogger(LobbyScene.class);
     protected static Communicator communicator;
-    private ObservableList<String> userList = FXCollections.observableArrayList();
-    private ListProperty<String> channelList;
+    private final ListProperty<String> channelList;
     private Timeline channelRequestTimer;
-    private ListView<String> channelListView = new ListView<>();
+    private final ListView<String> channelListView = new ListView<>();
     private Button createGameButton;
     private VBox bottomBox;
     private VBox leftBox;
     private TextField enterName;
     private Button confirmButton;
     private Button cancel;
-    private HBox confirmationBox = new HBox();
+    private final HBox confirmationBox = new HBox();
     private TextField messageToSend;
     private ScrollPane scroller;
     private TextFlow messages;
@@ -79,7 +78,11 @@ public class LobbyScene extends BaseScene {
     }
 
 
-    // Method to start the repeating timer
+
+
+    /**
+     *  Method to start the repeating timer
+     */
     public void startChannelRequestTimer() {
         // Defines the action to be taken each time the timer ticks
         EventHandler<ActionEvent> onTimerTick = e -> requestChannelList();
@@ -93,9 +96,14 @@ public class LobbyScene extends BaseScene {
         );
         channelRequestTimer.setCycleCount(Timeline.INDEFINITE); // Indefinite loop
         channelRequestTimer.play(); // Start the timeline
+        logger.info("channel request timer started");
     }
 
-    // Method that sends the LIST command to the server
+
+
+    /**
+     * Method that sends the LIST command to the server
+      */
     private void requestChannelList() {
         if (communicator != null) {
             communicator.send("LIST");
@@ -106,13 +114,20 @@ public class LobbyScene extends BaseScene {
         }
     }
 
-    // Method to stop the timer (optional, based on your application's flow)
+
+
+    /**
+     * Method to stop channel list request
+      */
     public void stopChannelRequestTimer() {
         if (channelRequestTimer != null) {
             channelRequestTimer.stop();
         }
     }
 
+    /**
+     * Initialises the Lobby controls
+     */
     @Override
     public void initialise() {
         communicator.addListener(this::handleCommunication);
@@ -121,6 +136,7 @@ public class LobbyScene extends BaseScene {
             if (event.getCode() == KeyCode.ESCAPE) {
                 handleEscapePressed();
                 event.consume(); // Optional, prevents further handling
+                logger.info("pressed esc");
             }
         });
 
@@ -128,18 +144,24 @@ public class LobbyScene extends BaseScene {
         // Prompt for channel name when the create game button is clicked
         createGameButton.setOnAction(event -> {
             // Show the TextField and Confirm button when Create Game is clicked
+            logger.info("Channel creation components visible");
             confirmationBox.setVisible(true); // Make sure this box is set to visible
             enterName.setVisible(true);
             confirmButton.setVisible(true);
             cancel.setVisible(true);
+
             bottomBox.getChildren()
                 .addAll(enterName, confirmationBox); // Add TextField and button to the layout
+
             enterName.requestFocus(); // Focus on the TextField
+
         });
 
 
         confirmButton.setOnAction(event -> {
             createChannel(enterName);
+            logger.info("Created channel");
+
         });
 
 
@@ -147,24 +169,28 @@ public class LobbyScene extends BaseScene {
             enterName.clear(); // Clear the text field
             bottomBox.getChildren().removeAll(enterName, confirmationBox);
             confirmationBox.setVisible(false);
+            logger.info("Channel creation components turned off");
+
         });
 
         leaveButton.setOnAction(event -> {
             communicator.send("PART"); // Send the command to leave the channel
             messageToSend.clear();
             Platform.runLater(() -> {
+
                 startGameButton.setVisible(false);
                 messages.getChildren().clear(); // Clear the chat messages
                 centreBox.setVisible(false); // Optionally, hide the chat interface
                 host = false; // Reset host status
 
+                logger.info("left channel");
             });
         });
 
 
         startGameButton.setOnAction(event -> {
 
-            if (host == true) {
+            if (host) {
                handleStart();
             } else {
                 logger.info("you are not host");
@@ -172,6 +198,11 @@ public class LobbyScene extends BaseScene {
         });
 
         channelListView.setCellFactory(lv -> new ListCell<String>() {
+            /**
+             * Used to handle items in channels List
+             * @param item ;
+             * @param empty ;
+             */
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
@@ -197,6 +228,10 @@ public class LobbyScene extends BaseScene {
 
 
     }
+
+    /**
+     * Handles Starting Game
+      */
     private void handleStart(){
         communicator.send("START");
         gameWindow.startMultiplayerScene();
@@ -204,6 +239,9 @@ public class LobbyScene extends BaseScene {
         logger.info("stopped channel request loop");
     }
 
+    /**
+     * Handles esc Control
+      */
     private void handleEscapePressed() {
         Multimedia.playAudio("transition.wav");
         stopChannelRequestTimer();
@@ -211,6 +249,11 @@ public class LobbyScene extends BaseScene {
         gameWindow.startMenu();
         logger.info("Pressed escape to go back");
     }
+
+    /**
+     * Handles the communication from the Server
+      * @param message: message from server
+     */
     public void handleCommunication(String message) {
         // Split the message to determine the command type
         String[] messageParts = message.split(" ", 2);
@@ -248,6 +291,10 @@ public class LobbyScene extends BaseScene {
     }
 
 
+    /**
+     * Method handles updating Channels List recieved from server
+     * @param newChannels;
+     */
     private void updateChannelList(String[] newChannels) {
         Platform.runLater(() -> {
             ObservableList<String> currentItems = channelListView.getItems();
@@ -267,25 +314,38 @@ public class LobbyScene extends BaseScene {
     }
 
 
+    /**
+     * Method handles joining channel
+      * @param content: channel entered
+     */
     private void handleJoin(String content) {
 
         Platform.runLater(() -> {
+
             if (!channelList.contains(content)) {
+
                 channelList.add(content);
                 channelListView.getSelectionModel().select(content);
-                openChatForChannel(content); // Open chat view for this channel
+                openChatForChannel(); // Open chat view for this channel
             }
             logger.info("Joined channel: " + content);
         });
     }
 
+    /**
+     * Method handles requesting to joing a channel
+      * @param channel: channel to enter
+     */
     private void userRequestsJoin(String channel) {
         communicator.send("JOIN " + channel);
         logger.info("Requested to join channel: " + channel);
-        openChatForChannel(channel);
+        openChatForChannel();
     }
 
-    private void openChatForChannel(String channel) {
+    /**
+     * Method handles controls for chat in channel
+     */
+    private void openChatForChannel() {
 
         // Show the chat UI components
         centreBox.setVisible(true);
@@ -293,6 +353,8 @@ public class LobbyScene extends BaseScene {
 
         messageToSend.setOnKeyPressed(event -> {
             if (event.getCode() == KeyCode.ENTER) {
+                logger.info("pressed enter to chat");
+
                 String text = messageToSend.getText();
                 if (text.startsWith("/nick ")) {
                     String newNick = text.substring(6); // Assuming command is "/nick newNickname"
@@ -307,6 +369,10 @@ public class LobbyScene extends BaseScene {
 
     }
 
+    /**
+     * Method to send messages through server
+     * @param message: message to send to chat
+     */
     private void sendChatMessage(String message) {
         communicator.send("MSG " + message);
 
@@ -315,10 +381,15 @@ public class LobbyScene extends BaseScene {
     }
 
 
+    /**
+     * Method used to handle messages that are sent from players through the server
+      * @param content: the message sent
+     */
     private void handleChatMessage(String content) {
         Platform.runLater(() -> {
             // Assuming content format is "username: messageContent"
             String[] parts = content.split(":", 2);
+
             if (parts.length == 2) {
                 String username = parts[0].trim();
                 String message = parts[1].trim();
@@ -334,7 +405,7 @@ public class LobbyScene extends BaseScene {
 
                 // Add the text node to the messages container (e.g., a VBox or TextFlow)
                 messages.getChildren().add(text);
-
+                logger.info("new message added");
 
                 scroller.setVvalue(1.0);
             }
@@ -342,7 +413,10 @@ public class LobbyScene extends BaseScene {
     }
 
 
-
+    /**
+     * Method to handle error handling events
+     * @param content: event unachievable
+     */
     private void handleError(String content) {
         Platform.runLater(() -> {
             // Display an error dialog with the content received
@@ -365,6 +439,9 @@ public class LobbyScene extends BaseScene {
         });
     }
 
+    /**
+     * Method to handle if you are the host(UI changes)
+      */
     private void handleHost() {
         Platform.runLater(() -> {
             host = true; // Set the host flag to true
@@ -375,17 +452,28 @@ public class LobbyScene extends BaseScene {
     }
 
 
-
+    /**
+     * Method to display alerts
+     * @param title: the error
+     * @param message: context
+     */
     private void showAlert(String title, String message) {
+
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle(title);
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+
     }
 
 
+    /**
+     * Method to handle users in channel
+      * @param content: users
+     */
     private void handleUsers(String content) {
+
         Platform.runLater(() -> {
             userDisplayBox.getChildren().clear(); // Clear previous user names
 
@@ -396,9 +484,13 @@ public class LobbyScene extends BaseScene {
                 userDisplayBox.getChildren().add(userLabel);
             }
         });
+
     }
 
 
+    /**
+     * Method to build Lobbies UI components
+     */
     @Override
     public void build() {
         root = new GamePane(gameWindow.getWidth(), gameWindow.getHeight());
@@ -507,6 +599,10 @@ public class LobbyScene extends BaseScene {
     }
 
 
+    /**
+     * Method to create new channel
+      * @param enterName: channel name
+     */
     private void createChannel(TextField enterName) {
         String channelName = enterName.getText().trim();
         if (!channelName.isEmpty()) {
@@ -515,7 +611,7 @@ public class LobbyScene extends BaseScene {
             enterName.clear();
             confirmationBox.setVisible(false);
             bottomBox.getChildren().removeAll(enterName, confirmationBox);
-
+            logger.info("channel create");
         }
     }
 

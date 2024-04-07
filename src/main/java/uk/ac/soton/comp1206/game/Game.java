@@ -2,7 +2,6 @@ package uk.ac.soton.comp1206.game;
 
 import java.util.HashSet;
 import java.util.Random;
-import java.util.Timer;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -19,7 +18,6 @@ import uk.ac.soton.comp1206.event.GameLoopListener;
 import uk.ac.soton.comp1206.event.GameOverListener;
 import uk.ac.soton.comp1206.event.LineClearedListener;
 import uk.ac.soton.comp1206.event.NextPieceListener;
-import uk.ac.soton.comp1206.ui.GameWindow;
 
 /**
  * The Game class handles the main logic, state and properties of the TetrECS game. Methods to manipulate the game state
@@ -44,8 +42,17 @@ public class Game {
      */
     protected final Grid grid;
 
+    /**
+     *represents current piece that will be played
+      */
     protected GamePiece currentPiece;
+    /**
+     * represents the next piece that will be played
+     */
     protected GamePiece followingPiece;
+    /**
+     * sets the points per stage
+     */
     private static final int POINTS_PER_LEVEL = 1000;
     protected NextPieceListener nextPieceListener;
     private FollowingPieceListener followingPieceListener;
@@ -53,62 +60,131 @@ public class Game {
     protected GameLoopListener gameLoopListener;
     protected GameOverListener gameOverListener;
 
+    /**
+     * flag to indicate whether a line is cleared or not
+      */
     private boolean swoosh = false;
-    GameWindow gameWindow;
 
+    /**
+     * integer Property to represent the score and be listened to when it changes
+     */
     private final IntegerProperty score = new SimpleIntegerProperty(0);
+    /**
+     * integer Property to represent the level and be listened to when it changes
+      */
     private final IntegerProperty level = new SimpleIntegerProperty(0);
+    /**
+     * integer Property to represent the lives and be listened to when it changes
+     */
     private final IntegerProperty lives = new SimpleIntegerProperty(3);
+    /**
+      * integer Property to represent the multiplier and be listened to when it changes
+      */
     private final IntegerProperty multiplier = new SimpleIntegerProperty(1);
 
+    /**
+     * method to retrieve the score
+      * @return current score
+     */
     public final int getScore() {
         return score.get();
     }
 
+    /**
+     * Method to set the score
+      * @param value: new score value
+     */
     public final void setScore(int value) {
         score.set(value);
     }
 
+    /**
+     * Method to retrieve the Property of the score
+     * Used to bind score and change the UI
+     * @return the Score
+     */
     public IntegerProperty scoreProperty() {
         return score;
     }
 
+    /**
+     * getter method to get the level
+     * @return current Level
+     */
     public final int getLevel() {
         return level.get();
     }
 
+    /**
+     * setter method to set the level
+     * @param value: new Level
+     */
     public final void setLevel(int value) {
         level.set(value);
     }
 
+    /**
+     * Method to get the IntegerProperty of level
+     * Used for binding to change the UI
+      * @return level IntegerProperty
+     */
     public IntegerProperty levelProperty() {
         return level;
     }
 
+    /**
+     * getter Method: for lives
+     * @return current Lives
+     */
     public final int getLives() {
         return lives.get();
     }
 
+    /**
+     * setter Method: for lives
+     * @param value:new Lives
+     */
     public final void setLives(int value) {
         lives.set(value);
     }
 
+    /**
+     * Method to retrieve the lives IntegerProperty
+     * Used for binding to change the UI
+      * @return lives IntegerProperty
+     */
     public IntegerProperty livesProperty() {
         return lives;
     }
 
+    /**
+     * getter Method:for multiplier
+      * @return current multiplier
+     */
     public final int getMultiplier() {
         return multiplier.get();
     }
 
+    /**
+     * setter Method: for multiplier
+     * @param value:new multiplier
+     */
     public final void setMultiplier(int value) {
         multiplier.set(value);
     }
 
+    /**
+     * Method to retrieve the integerProperty of multiplier
+     * used for binding to change the UI
+     * @return IntegerProperty of multiplier
+     */
     public IntegerProperty multiplierProperty() {
         return multiplier;
     }
 
+    /**
+     * Used to execute the loop within a specific timeZone
+      */
     private ScheduledExecutorService executorService =
         Executors.newSingleThreadScheduledExecutor();
     protected Runnable gameLoop;
@@ -149,7 +225,8 @@ public class Game {
 
     /**
      * Handles what should happen when a particular block is clicked
-     *
+     *checks whether a piece can be played
+     * -plays the piece
      * @param gameBlock the block that was clicked
      */
     public boolean blockClicked(GameBlock gameBlock) {
@@ -219,6 +296,7 @@ public class Game {
 
     /**
      * orders the next pieces in play
+     * triggers the nextPieceListeners to display the scene on the UI
      */
     public void nextPiece() {
         // Makes the following piece the current piece
@@ -240,6 +318,7 @@ public class Game {
 
     /**
      * The method swaps between the current and following pieces
+     * Triggers listener to display the change in the UI
      */
     public void swapCurrentPiece() {
         if (currentPiece != null && followingPiece != null) {
@@ -274,6 +353,7 @@ public class Game {
 
     /**
      * rotates current piece clockwise
+     * listener triggered to display change
      */
     public void rotateCurrentPiece() {
 
@@ -287,7 +367,8 @@ public class Game {
     }
 
     /**
-     * rotates current piece counter clockwise
+     * rotates current piece counter-clockwise
+     * listener triggered to display change in UI
      */
     public void rotateCurrentPieceCounterClockwise() {
         if (currentPiece != null) {
@@ -311,9 +392,53 @@ public class Game {
         }
     }
 
+    /**
+     * method used to grant a life in singlePlayer mode
+     */
+    public void increaseLives() {
+        if (score.get() >= 200) {
+            lives.set(lives.get() + 1);
+            setScore(score.get() - 200);
+            Multimedia.playAudio("lifegain.wav");
+
+        } else {
+            Multimedia.playAudio("fail.wav");
+
+        }
+    }
 
     /**
-     * checks for full lines (either vertical or horizontal)  and clears them if they exist
+     * Method that skips the current piece for 50 Score
+      */
+    public void skipPiece() {
+
+        if (score.get() >= 50) {
+            nextPiece();
+            score.set(score.get() - 50);
+
+        }else {
+            Multimedia.playAudio("fail.wav");
+        }
+
+    }
+
+    /**
+     * method used to clear the board
+      */
+    public void clearBoard(){
+        if (score.get() >= 300){
+            grid.clearGrid();
+            score.set(score.get()-300);
+            Multimedia.playAudio("explode.wav");
+        }else {
+            Multimedia.playAudio("fail.wav");
+        }
+    }
+
+
+    /**
+     * Method used to check for full lines (either vertical or horizontal)
+     * clears any lines if they exist
      */
     public void afterPiece() {
 
@@ -370,12 +495,11 @@ public class Game {
     }
 
     /**
-     * if any lines are cleared the new score is calculated
-     * multiplier is also handled based on whether the lines are cleared or not
-     * updating the level is also handled based on the points
-     *
-     * @param linesCleared
-     * @param blocksCleared
+     * Method used to calculate the new score: after line cleared event
+     * calculates new multiplier
+     * also checks level
+     * @param linesCleared:num of lines cleared
+     * @param blocksCleared:num of blocks that are cleared
      */
     public void addScore(int linesCleared, int blocksCleared) {
 
@@ -403,9 +527,9 @@ public class Game {
     /**
      * Method to set the current piece listener
      *
-     * @param listener
+     * @param listener;
      */
-    public  void setOnNextPieceListener(NextPieceListener listener) {
+    public void setOnNextPieceListener(NextPieceListener listener) {
         this.nextPieceListener = listener;
     }
 
@@ -413,7 +537,7 @@ public class Game {
     /**
      * triggers the listener to act
      *
-     * @param piece
+     * @param piece; the next piece
      */
     protected void triggerNextPieceListener(GamePiece piece) {
         if (nextPieceListener != null) {
@@ -424,7 +548,7 @@ public class Game {
     /**
      * triggers the listener to act
      *
-     * @param piece
+     * @param piece the following piece
      */
     protected void triggerFollowingPieceListener(GamePiece piece) {
         if (followingPieceListener != null) {
@@ -435,7 +559,7 @@ public class Game {
     /**
      * Method to set the following piece listener
      *
-     * @param listener
+     * @param listener;
      */
     public void setOnFollowingPieceListener(FollowingPieceListener listener) {
         this.followingPieceListener = listener;
@@ -444,7 +568,7 @@ public class Game {
     /**
      * sets the lineCleared listener
      *
-     * @param listener
+     * @param listener;
      */
     public void setOnLineClearedListener(LineClearedListener listener) {
         this.lineClearedListener = listener;
@@ -477,7 +601,7 @@ public class Game {
     /**
      * schedules next loop
      *
-     * @param delay
+     * @param delay:time to delay
      */
     protected void scheduleNextLoop(int delay) {
         executorService.schedule(gameLoop, delay, TimeUnit.MILLISECONDS);
@@ -497,7 +621,9 @@ public class Game {
         } else {
             setMultiplier(1);
             nextPiece();
+
             logger.info("oops timer to 0");
+
             if (gameLoopListener != null) {
                 gameLoopListener.onGameLoop();
             }
@@ -510,10 +636,15 @@ public class Game {
 
     }
 
+    /**
+     * sets listener for game loop
+     * @param listener;
+     */
     public void setOnGameLoopListener(GameLoopListener listener) {
         this.gameLoopListener = listener;
     }
-    public void setGameOverListener(GameOverListener listener){
+
+    public void setGameOverListener(GameOverListener listener) {
         this.gameOverListener = listener;
     }
 
@@ -531,6 +662,9 @@ public class Game {
         }
     }
 
+    /**
+     * Method used to stop loop when game is done
+      */
     public void stopGameLoop() {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdownNow(); // Stop all tasks and interrupt the running tasks

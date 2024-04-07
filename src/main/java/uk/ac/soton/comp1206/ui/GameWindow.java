@@ -140,22 +140,36 @@ public class GameWindow {
         InstructionsScene instructionsScene = new InstructionsScene(this);
         loadScene(instructionsScene);
     }
+
+    /**
+     * loads the Settings Scene
+     */
     public void startSettingsScene(){
         SettingsScene settingsScene = new SettingsScene(this);
         loadScene(settingsScene);
     }
 
+    /**
+     * loads the lobby scene
+     */
     public void startLobbyScene() {
         LobbyScene lobbyScene = new LobbyScene(this);
         loadScene(lobbyScene);
 
     }
 
+    /**
+     * loads the Multiplayer Scene
+      */
     public void startMultiplayerScene() {
         MultiplayerScene multiplayerScene = new MultiplayerScene(this);
         loadScene(multiplayerScene);
     }
 
+    /**
+     * loads the score Scene
+      * @param game: Instance of the Game
+     */
     public void startScoreScene(Game game) {
 
         logger.info("displaying score Scene");

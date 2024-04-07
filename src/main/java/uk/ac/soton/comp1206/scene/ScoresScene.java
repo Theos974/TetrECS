@@ -12,7 +12,6 @@ import javafx.application.Platform;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -36,19 +35,24 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public class ScoresScene extends BaseScene {
-    private ScoresList scoresList;
+    private final ScoresList scoresList;
     static final Logger logger = LogManager.getLogger(ScoresScene.class);
-    private Game game;
+    private final Game game;
     VBox centerBox = new VBox();
     HBox leaderBoardsBox = new HBox();
     VBox titleBox;
 
-    private ListProperty<Pair<String, Integer>> localScoresList;
-    private ListProperty<Pair<String, Integer>> remoteScoresList =
+    private final ListProperty<Pair<String, Integer>> localScoresList;
+    private final ListProperty<Pair<String, Integer>> remoteScoresList =
         new SimpleListProperty<>(FXCollections.observableArrayList());
-    private Communicator communicator;
+    private final Communicator communicator;
     private MultiplayerGame multiplayerGame;
 
+    /**
+     * ScoreScene class used to display the leaderBoards
+      * @param gameWindow:
+     * @param game:
+     */
     public ScoresScene(GameWindow gameWindow, Game game) {
         super(gameWindow);
         this.game = game;
@@ -63,6 +67,9 @@ public class ScoresScene extends BaseScene {
     }
 
     @Override
+    /*
+      Builds the UI components of the scene
+     */
     public void build() {
 
         root = new GamePane(gameWindow.getWidth(), gameWindow.getHeight());
@@ -101,9 +108,7 @@ public class ScoresScene extends BaseScene {
 
         var retryText = new Text("Retry");
         retryText.getStyleClass().add("button-glow-red");
-        retryText.setOnMouseClicked(e -> {
-            gameWindow.startChallenge();
-        });
+        retryText.setOnMouseClicked(e -> gameWindow.startChallenge());
 
         // Back to menu
         var backText = new Text("Menu");
@@ -120,6 +125,9 @@ public class ScoresScene extends BaseScene {
     }
 
     @Override
+    /**
+     * Initialises the working of the scene
+      */
     public void initialise() {
         logger.info("Initializing " + this.getClass().getName());
 
@@ -135,8 +143,12 @@ public class ScoresScene extends BaseScene {
                 gameWindow.startMenu();
             }
         });
+        logger.info("Score scene initialised");
     }
 
+    /**
+     * Method used to load the local scores from the save file
+     */
     public void loadScores() {
         File f = new File("localScores.txt");
 
@@ -169,16 +181,29 @@ public class ScoresScene extends BaseScene {
         }
     }
 
+    /**
+     * Method to request online scores from the server
+     */
     public void loadOnlineScores() {
         communicator.send("HISCORES");
 
     }
 
-    //Method to write the current score into the communicator
+
+
+    /**
+     * Method to write the current score into the server
+      * @param name: player name
+     * @param score: new high score
+     */
     private void writeOnlineScore(String name, Integer score) {
         communicator.send("HISCORE " + name + ":" + score);
     }
 
+    /**
+     * Method that handles the communication with the server
+     * @param message: server message
+     */
     public void handleCommunication(String message) {
         String[] scores = message.split(" ");
         Platform.runLater(() -> {
@@ -201,6 +226,10 @@ public class ScoresScene extends BaseScene {
         });
     }
 
+    /**
+     * Method used to write new Scores into the save file
+     * @param playerScores: new score
+     */
     public void writeScores(List<Pair<String, Integer>> playerScores) {
         File f = new File("localScores.txt");
 
@@ -222,25 +251,38 @@ public class ScoresScene extends BaseScene {
 
     }
 
+    /**
+     * Method to check for new high score possibility
+      * @return : Boolean
+     */
     private boolean checkForHighScore() {
         return localScoresList.stream().anyMatch(score -> game.getScore() > score.getValue());
     }
 
+    /**
+     * Method to check for new Online High score possibility
+      * @return : Boolean
+     */
     private boolean checkForOnlineHighScore() {
         return remoteScoresList.stream().anyMatch(score -> game.getScore() > score.getValue());
 
     }
 
+    /**
+     * Method to prompt for Player name if High Score was achieved
+      */
     public void promptForName() {
         // If there is a high score, prompt for the name.
         if (checkForHighScore()) {
             // Show prompt for name entry
+           logger.info("new high score");
             var highScoreLabel = new Label("New Personal High Score Achieved!");
             highScoreLabel.getStyleClass().add("headingLeaderBoard");
             var enterName = new TextField();
             enterName.getStyleClass().add("TextField");
             enterName.setPromptText("Enter your Name:"); // Use prompt text instead of setting text
             enterName.textProperty().addListener((observable, oldValue, newValue) -> {
+
                 if (!newValue.isEmpty()) {
                     enterName.setPromptText(""); // Clear prompt text when user starts typing
                 }
@@ -251,16 +293,20 @@ public class ScoresScene extends BaseScene {
             centerBox.getChildren().addAll(highScoreLabel, enterName, confirmButton);
 
             // Set up the TextField and Button
+
             enterName.setOnKeyPressed(e -> {
                 if (e.getCode() == KeyCode.ENTER && !enterName.getText().trim().isEmpty()) {
                     saveHighScore(enterName.getText().trim(), game.getScore());
+                    logger.info("pressed enter to confirm");
                 }
             });
+
 
             confirmButton.setOnAction(e -> {
                 String enteredName = enterName.getText().trim();
                 if (!enteredName.isEmpty()) {
                     saveHighScore(enteredName, game.getScore());
+                    logger.info("button to confirm pressed");
                 }
             });
 
@@ -270,6 +316,7 @@ public class ScoresScene extends BaseScene {
             // Trim the list to top 10 if necessary
             while (localScoresList.size() > 10) {
                 localScoresList.remove(localScoresList.size() - 1);
+                logger.info("list trimmed to Top 10");
             }
 
             // Show existing scores if no new high score
@@ -277,6 +324,11 @@ public class ScoresScene extends BaseScene {
         }
     }
 
+    /**
+     * Method used to handle displaying the LeaderBoards
+     * Single Player: Local and Online LeaderBoards
+     * Multiplayer: Game and Online LeaderBoards
+      */
     private void displayLeaderboard() {
 
 
@@ -300,6 +352,9 @@ public class ScoresScene extends BaseScene {
 
         // Check if the game instance is MultiplayerGame and bind the scores
         if (multiplayerGame != null) {
+
+            logger.info("Multiplayer Mode: Multiplayer Leader getting ready");
+
             multiplayerScoresListUI.bindScores(
                 ((MultiplayerGame) game).getScores()); // Use your actual method to get multiplayer scores
         }
@@ -344,13 +399,14 @@ public class ScoresScene extends BaseScene {
             multiplayerScoresListUI.revealScores();
             Platform.runLater(onlineScoresList::revealScores);
 
+
         } else {
             leaderBoardsBox.getChildren().addAll(localScoresBox, onlineScoresBox);
 
             scoresList.revealScores();
             Platform.runLater(onlineScoresList::revealScores);
         }
-
+        logger.info("displaying leaderBoards");
         // Start playing end music
         Multimedia.stopMusic();
         Multimedia.playMusic("end.wav");
@@ -358,11 +414,17 @@ public class ScoresScene extends BaseScene {
 
     }
 
+    /**
+     * Method used to handle saving the new high Scores
+      * @param playerName:name of player
+     * @param score: score achieved
+     */
     private void saveHighScore(String playerName, int score) {
 
         if (checkForOnlineHighScore()) {
             writeOnlineScore(playerName, score);
             loadOnlineScores();
+            logger.info("saved online high score");
         }
 
         // Insert the new high score into the localScoresList

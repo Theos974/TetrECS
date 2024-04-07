@@ -57,6 +57,10 @@ public class Multimedia {
         }
 
     }
+
+    /**
+     * Method used to stop the music playing
+     */
     public static void stopMusic() {
         if (musicPlayer != null) {
             musicPlayer.stop();

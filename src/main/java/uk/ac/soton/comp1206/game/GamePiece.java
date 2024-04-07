@@ -2,7 +2,6 @@ package uk.ac.soton.comp1206.game;
 
 /**
  * Instances of GamePiece Represents the model of a specific Game Piece with it's block makeup.
- *
  * The GamePiece class also contains a factory for producing a GamePiece of a particular shape, as specified by it's
  * number.
  */

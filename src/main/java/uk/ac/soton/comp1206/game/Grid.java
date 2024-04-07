@@ -4,7 +4,6 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import uk.ac.soton.comp1206.scene.ChallengeScene;
 
 /**
  * The Grid is a model which holds the state of a game board. It is made up of a set of Integer values arranged in a 2D
@@ -58,11 +57,11 @@ public class Grid {
 
 
     /**
-     * iterates through the pieces grid to see whether the corresponding places in the games grid are occupied to check if it can place the piece
+     * Method used to iterate through the grid to see whether the corresponding places in the games grid are occupied to check if it can place the piece
      * @param piece (checked if it fits)
-     * @param centerX
-     * @param centerY
-     * @return
+     * @param centerX:x coordinate
+     * @param centerY@y coordinate
+     * @return whether piece can be played(Boolean)
      */
     public boolean canPlayPiece(GamePiece piece, int centerX, int centerY) {
         int[][] blocks = piece.getBlocks();
@@ -88,11 +87,11 @@ public class Grid {
 
 
     /**
-     * method to check if the piece can be played.
-     * It also changes the grid to also fit the values of the new piece
-     * @param piece
-     * @param centerX
-     * @param centerY
+     * method checks if the piece can be played.(canPlayPiece method)
+     * Changes the grid to  fit the values of the new piece
+     * @param piece:current piece played
+     * @param centerX:x coordinate
+     * @param centerY:y coordinate
      */
     public void playPiece(GamePiece piece, int centerX, int centerY) {
         logger.info("piece placed");
@@ -170,6 +169,17 @@ public class Grid {
      */
     public int getRows() {
         return rows;
+    }
+
+
+    /**
+     * method used to clear the board grid
+     */
+    public void clearGrid(){
+        for (int x = 0; x < this.cols; x++) {
+            for (int y = 0; y < this.rows; y++)
+                this.grid[x][y].set(0);
+        }
     }
 
 }
