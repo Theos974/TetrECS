@@ -165,7 +165,6 @@ public class GameBlock extends Canvas {
      * calls paint method to paint the state
      */
     protected void setHovered() {
-        logger.info("set block to hovering");
         this.hovered = true;
         paint();
     }
@@ -178,7 +177,6 @@ public class GameBlock extends Canvas {
      * calls paint method to reflect the change
      */
     public void removeHover() {
-        logger.info("removing hover");
         hovered = false;
         paint(); // repaint to reflect the change in hover state
     }

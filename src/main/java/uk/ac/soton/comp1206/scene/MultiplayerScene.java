@@ -256,10 +256,10 @@ public class MultiplayerScene extends ChallengeScene {
         }
     }
 
-    @Override
     /**
-     * Overridden method to setUP the Game
-      */
+     * Overridden method to setUp the Game
+     */
+    @Override
     public void setupGame() {
 
         logger.info("inside setUp");
@@ -318,12 +318,26 @@ public class MultiplayerScene extends ChallengeScene {
      * method to initialise the workings of the scene
      */
     public void initialise() {
-        super.initialise();
+        logger.info("Initialising Challenge");
+        Multimedia.playMusic("game.wav");
+        game.start();
+        highScore.set(getHighScore());
+        highScoreSetter();
+        logger.info("next pieces initialised");
+        game.setOnLineClearedListener(this::fade); //sets the listener to clear line
+        setPieces();
+        handleClick();
+        setKeyboard();
+        game.setOnGameLoopListener(this::resetTimerBar);
+        resetTimerBar();
+        game.setGameOverListener(this::gameOver);
         resetTimer();
         refreshLeaderboard();
         handleChatField();
 
     }
+
+
 
 
 }

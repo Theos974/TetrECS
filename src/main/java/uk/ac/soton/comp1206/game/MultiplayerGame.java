@@ -1,6 +1,8 @@
 package uk.ac.soton.comp1206.game;
 
+import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -34,13 +36,13 @@ public class MultiplayerGame extends Game {
         new SimpleListProperty<>(FXCollections.observableArrayList());
     /**
      * List used to track Lives of each player
-      */
+     */
     private final ListProperty<Pair<String, Integer>> livesList =
         new SimpleListProperty<>(FXCollections.observableArrayList());
     private static final Logger logger = LogManager.getLogger(MultiplayerGame.class);
     /**
      * Integer property used to handle the new pieces
-      */
+     */
     private final IntegerProperty nextPieceValues = new SimpleIntegerProperty();
 
     /**
@@ -50,8 +52,10 @@ public class MultiplayerGame extends Game {
 
     /**
      * Instance of Multiplayer scene to add new components(messages/notifications)
-      */
+     */
     private MultiplayerScene multiplayerScene;
+    private Queue<GamePiece> pieceQueue = new ArrayDeque<>();
+    private Boolean gameStarted = false;
 
     /**
      * Create a new game with the specified rows and columns. Creates a corresponding grid model.
@@ -66,7 +70,8 @@ public class MultiplayerGame extends Game {
 
     /**
      * Method used to handle the server communication
-     * @param message: recieved by the server
+     *
+     * @param message: message by the server
      */
     public void handleCommunication(String message) {
         // Split the message to determine the command type
@@ -82,8 +87,15 @@ public class MultiplayerGame extends Game {
                 multiplayerScene.addChatMessage(userName + ": " + chatMessage);
                 break;
             case "PIECE":
-                nextPieceValues.set(Integer.parseInt(content));
-                handlePieces();
+                int pieceId = Integer.parseInt(messageParts[1]);
+                GamePiece gamePiece = GamePiece.createPiece(pieceId);
+                communicator.send("PIECE");
+                if (!gameStarted) {
+                    addInitialPiece(gamePiece);
+
+                }else{
+                    pieceQueue.add(gamePiece);
+                }
                 break;
             case "SCORE":
                 String playerName = messageParts[1];
@@ -105,42 +117,28 @@ public class MultiplayerGame extends Game {
 
     /**
      * overridden method from Game class
-     *  used to spawn new pieces by requesting them from the server
-      * @return : piece spawned
+     * used to spawn new pieces by removing them from the ordered queue
+     *
+     * @return : piece spawned
      */
     @Override
     public GamePiece spawnPiece() {
-        logger.info("multiplayer spawn Piece");
-
-        communicator.send("PIECE");
-        return handlePieces();
+        if (!pieceQueue.isEmpty()) {
+            return pieceQueue.poll(); // Remove and return the head of the queue
+        } else {
+            // Handle the case where the queue is unexpectedly empty
+            logger.error("Piece queue is empty");
+            return null; // Consider how you want to handle this situation
+        }
     }
-
-
-    /**
-     * Method used to create the newPieces using the IntegerProperty to keep track of the series
-     * @return : the new spawned piece
-     */
-    public GamePiece handlePieces() {
-
-
-        AtomicInteger pieceNum = new AtomicInteger();
-
-        pieceNum.set(nextPieceValues.getValue());
-
-        logger.info("creating new piece based on server");
-        return GamePiece.createPiece(pieceNum.get());
-
-    }
-
-
 
     //Handling Board
 
     /**
      * Overridden method used to handle when a block is clicked
      * informs the server of the players board state
-     * @param  : block currently clicked
+     *
+     * @param : block currently clicked
      */
     @Override
     public boolean blockClicked(GameBlock gameBlock) {
@@ -172,9 +170,10 @@ public class MultiplayerGame extends Game {
 
     /**
      * Method used to handle the player's scores
-      * @param playerName: name of the player
-     * @param newScore: the current score of the player
-     * The scores of each player are recieved from the server
+     *
+     * @param playerName: name of the player
+     * @param newScore:   the current score of the player
+     *                    The scores of each player are recieved from the server
      */
     private void updatePlayerScore(String playerName, int newScore) {
 
@@ -203,7 +202,8 @@ public class MultiplayerGame extends Game {
 
     /**
      * Method used to handle the SCORES msg from the server
-      * @param content: data of each player's state
+     *
+     * @param content: data of each player's state
      */
     public void handleScoresMessage(String content) {
 
@@ -223,8 +223,9 @@ public class MultiplayerGame extends Game {
 
     /**
      * intermediate method used to  update players' score and update their state in the game
-     * @param playerName: current player checked
-     * @param newScore: their score
+     *
+     * @param playerName:  current player checked
+     * @param newScore:    their score
      * @param livesOrDead: whether they are still in play
      */
     private void updatePlayerScoreAndStatus(String playerName, int newScore, String livesOrDead) {
@@ -244,7 +245,8 @@ public class MultiplayerGame extends Game {
     /**
      * Method used to recieve the IntegerProperty of the scores
      * used for binding to update the UI with new scores
-      * @return : integerProperty of scores
+     *
+     * @return : integerProperty of scores
      */
     public ListProperty<Pair<String, Integer>> getScores() {
         return scores;
@@ -255,7 +257,8 @@ public class MultiplayerGame extends Game {
     /**
      * Method used to add notifications to the UI
      * updates the players with a players current state
-     * @param playerName: current player
+     *
+     * @param playerName:     current player
      * @param remainingLives: their remaining lives
      */
     public void playerLostLife(String playerName, int remainingLives) {
@@ -266,6 +269,7 @@ public class MultiplayerGame extends Game {
 
     /**
      * Method used to check off dead players and notify alive players
+     *
      * @param playerName: dead players name
      */
     public void playerDied(String playerName) {
@@ -279,7 +283,8 @@ public class MultiplayerGame extends Game {
 
     /**
      * Method used to set the current Multiplayer scene
-      * @param scene: Multiplayer
+     *
+     * @param scene: Multiplayer
      */
     public void setMultiplayerScene(MultiplayerScene scene) {
         this.multiplayerScene = scene;
@@ -288,8 +293,8 @@ public class MultiplayerGame extends Game {
     /**
      * Method used to update all players lives
      *
-      * @param playerName: current player
-     * @param newLives: player's life
+     * @param playerName: current player
+     * @param newLives:   player's life
      */
     private void updatePlayerLives(String playerName, int newLives) {
         // Find or create the player's lives entry
@@ -315,19 +320,48 @@ public class MultiplayerGame extends Game {
 
 
     /**
-     *Overridden method used to initialise the game
-      */
+     * Overridden method used to initialise the game
+     */
     @Override
     public void initialiseGame() {
         logger.info("Initialising game");
-        for (int i = 0;i<3;i++) {
+        for (int i = 0; i < 6; i++) {
             communicator.send("PIECE");
         }
-        currentPiece = spawnPiece();
-        followingPiece = spawnPiece();
         startGameLoop();
         communicator.addListener(this::handleCommunication);
 
+    }
+
+    /**
+     * Method that handles initialising the Game with the first pieces
+      */
+    public void tryStartGame() {
+        if (pieceQueue.size() >= 3) { // Assuming 3 is the number of initial pieces needed
+            // Now we have enough pieces to start, so set the current and following pieces
+            currentPiece = pieceQueue.poll();
+            followingPiece = pieceQueue.poll();
+            // Update the UI with these pieces
+            Platform.runLater(() -> {
+                multiplayerScene.nextPieceBoard.setPiece(
+                    multiplayerScene.game.getCurrentPiece()); // initialised first piece
+                multiplayerScene.followingPieceBoard.setPiece(
+                    multiplayerScene.game.getFollowingPiece());//initialise following piece
+                multiplayerScene.setPieces();
+            });
+            // Start the game loop
+            startGameLoop();
+            gameStarted = true;
+        }
+    }
+
+    /**
+     * Method that handles adding the first pieces and starting the game
+     * @param piece: Piece to add to queue
+     */
+    public void addInitialPiece(GamePiece piece) {
+        pieceQueue.add(piece);
+        tryStartGame(); // Each time a piece is added, check if we can start
     }
 
 

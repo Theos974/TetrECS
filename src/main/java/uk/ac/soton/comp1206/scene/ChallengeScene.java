@@ -42,8 +42,8 @@ public class ChallengeScene extends BaseScene {
 
     protected GameBoard board;
 
-    protected PieceBoard nextPieceBoard;
-    protected PieceBoard followingPieceBoard;
+    public PieceBoard nextPieceBoard;
+    public PieceBoard followingPieceBoard;
     protected Rectangle timerBar;
     private Timeline timeline;
     protected VBox bottomBox;
@@ -52,10 +52,10 @@ public class ChallengeScene extends BaseScene {
     protected VBox centerBox;
     protected VBox leftSection;
     protected Text title;
-    private final IntegerProperty highScore = new SimpleIntegerProperty();
+    protected final IntegerProperty highScore = new SimpleIntegerProperty();
 
     private static final Logger logger = LogManager.getLogger(ChallengeScene.class);
-    protected Game game;
+    public Game game;
 
     protected int x, y = 0;
 
@@ -399,7 +399,7 @@ public class ChallengeScene extends BaseScene {
     /**
      * Method sets and updates the pieces of the boards with listeners
      */
-    protected void setPieces() {
+    public void setPieces() {
         game.setOnNextPieceListener(piece -> {
             // Update the PieceBoard with the new piece
             Platform.runLater(() -> nextPieceBoard.setPiece(piece));

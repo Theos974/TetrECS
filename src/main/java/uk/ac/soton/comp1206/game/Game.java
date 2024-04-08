@@ -65,6 +65,7 @@ public class Game {
       */
     private boolean swoosh = false;
 
+
     /**
      * integer Property to represent the score and be listened to when it changes
      */

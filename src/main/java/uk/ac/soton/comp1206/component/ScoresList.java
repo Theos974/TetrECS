@@ -57,7 +57,6 @@ public class ScoresList extends VBox {
     public void updateScoreListView() {
         this.getChildren().clear();
 
-        logger.info("update list view");
 
         // Defines and populates the list of colors
         List<String> colors = new ArrayList<>();

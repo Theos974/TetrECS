@@ -66,10 +66,10 @@ public class ScoresScene extends BaseScene {
         }
     }
 
-    @Override
-    /*
-      Builds the UI components of the scene
+    /**
+     * Method used to build the UI components of the scene
      */
+    @Override
     public void build() {
 
         root = new GamePane(gameWindow.getWidth(), gameWindow.getHeight());
@@ -124,10 +124,10 @@ public class ScoresScene extends BaseScene {
         }
     }
 
-    @Override
     /**
      * Initialises the working of the scene
-      */
+     */
+    @Override
     public void initialise() {
         logger.info("Initializing " + this.getClass().getName());
 
