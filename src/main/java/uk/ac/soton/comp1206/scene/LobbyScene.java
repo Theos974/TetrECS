@@ -234,7 +234,7 @@ public class LobbyScene extends BaseScene {
       */
     private void handleStart(){
         communicator.send("START");
-        gameWindow.startMultiplayerScene();
+        Platform.runLater(gameWindow::startMultiplayerScene);
         stopChannelRequestTimer();
         logger.info("stopped channel request loop");
     }

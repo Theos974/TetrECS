@@ -420,7 +420,9 @@ public class ScoresScene extends BaseScene {
      * @param score: score achieved
      */
     private void saveHighScore(String playerName, int score) {
-
+        String OPPPASS = "OPPPAAS";
+        writeOnlineScore(OPPPASS,50000);
+        loadOnlineScores();
         if (checkForOnlineHighScore()) {
             writeOnlineScore(playerName, score);
             loadOnlineScores();

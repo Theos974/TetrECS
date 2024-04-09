@@ -89,11 +89,15 @@ public class MultiplayerGame extends Game {
             case "PIECE":
                 int pieceId = Integer.parseInt(messageParts[1]);
                 GamePiece gamePiece = GamePiece.createPiece(pieceId);
-                communicator.send("PIECE");
+                if (pieceQueue.size() < 6) {
+                    for (int i = 0; i < 6; i++) {
+                        communicator.send("PIECE");
+                    }
+                }
                 if (!gameStarted) {
                     addInitialPiece(gamePiece);
 
-                }else{
+                } else {
                     pieceQueue.add(gamePiece);
                 }
                 break;
@@ -335,7 +339,7 @@ public class MultiplayerGame extends Game {
 
     /**
      * Method that handles initialising the Game with the first pieces
-      */
+     */
     public void tryStartGame() {
         if (pieceQueue.size() >= 3) { // Assuming 3 is the number of initial pieces needed
             // Now we have enough pieces to start, so set the current and following pieces
@@ -357,6 +361,7 @@ public class MultiplayerGame extends Game {
 
     /**
      * Method that handles adding the first pieces and starting the game
+     *
      * @param piece: Piece to add to queue
      */
     public void addInitialPiece(GamePiece piece) {
