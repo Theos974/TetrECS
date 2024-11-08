@@ -19,7 +19,7 @@ Clone the repository:
 
 bash
 Copy code
-git clone https://github.com/yourusername/TetrECS.git
+git clone https://github.com/Theos974/TetrECS.git
 Navigate to the project directory:
 
 bash
